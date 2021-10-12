@@ -13,7 +13,7 @@ import em
 import shutil
 
 sys.path.insert(0, os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), "../../modules/pyuavcan/"))
+    os.path.dirname(os.path.realpath(__file__)), "../pyuavcan/"))
 import uavcan.dsdl
 
 from canard_dsdlc_helpers import *

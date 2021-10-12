@@ -13,7 +13,7 @@ import em
 import math
 import copy
 sys.path.insert(0, os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), "../../modules/pyuavcan/"))
+    os.path.dirname(os.path.realpath(__file__)), "../modules/pyuavcan/"))
 import uavcan
 
 class bcolors:

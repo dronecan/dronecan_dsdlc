@@ -11,7 +11,7 @@ import sys
 import subprocess
 import pexpect
 sys.path.insert(0, os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), "../../modules/pyuavcan/"))
+    os.path.dirname(os.path.realpath(__file__)), "../modules/pyuavcan/"))
 import uavcan
 
 from canard_dsdlc_helpers import *
