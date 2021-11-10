@@ -13,8 +13,8 @@ import em
 import math
 import copy
 sys.path.insert(0, os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), "../modules/pyuavcan/"))
-import uavcan
+    os.path.dirname(os.path.realpath(__file__)), "../modules/pydronecan/"))
+import dronecan
 
 class bcolors:
     HEADER = '\033[95m'
@@ -89,15 +89,15 @@ def get_empy_env_broadcast(msg):
         'msg_define_name': msg_underscored_name
     }
 
-def uavcan_type_is_signed(uavcan_type):
-    assert uavcan_type.category == uavcan_type.CATEGORY_PRIMITIVE
-    if uavcan_type.kind == uavcan_type.KIND_BOOLEAN:
+def dronecan_type_is_signed(dronecan_type):
+    assert dronecan_type.category == dronecan_type.CATEGORY_PRIMITIVE
+    if dronecan_type.kind == dronecan_type.KIND_BOOLEAN:
         return False
-    elif uavcan_type.kind == uavcan_type.KIND_UNSIGNED_INT:
+    elif dronecan_type.kind == dronecan_type.KIND_UNSIGNED_INT:
         return False
-    elif uavcan_type.kind == uavcan_type.KIND_SIGNED_INT:
+    elif dronecan_type.kind == dronecan_type.KIND_SIGNED_INT:
         return True
-    elif uavcan_type.kind == uavcan_type.KIND_FLOAT:
+    elif dronecan_type.kind == dronecan_type.KIND_FLOAT:
         return True
 
 def union_msg_tag_bitlen_from_num_fields(num_fields):
@@ -130,30 +130,30 @@ def underscored_name_to_ctype(name):
 def underscored_name_to_cpptype(name):
     return '%s' % (name)
 
-def uavcan_type_to_ctype(uavcan_type):
-    assert uavcan_type.category != uavcan_type.CATEGORY_VOID
-    if uavcan_type.category == uavcan_type.CATEGORY_COMPOUND:
-        assert uavcan_type.kind == uavcan_type.KIND_MESSAGE
-        return 'struct %s' % (underscored_name(uavcan_type))
-    elif uavcan_type.category == uavcan_type.CATEGORY_PRIMITIVE:
-        if uavcan_type.kind == uavcan_type.KIND_BOOLEAN:
+def dronecan_type_to_ctype(dronecan_type):
+    assert dronecan_type.category != dronecan_type.CATEGORY_VOID
+    if dronecan_type.category == dronecan_type.CATEGORY_COMPOUND:
+        assert dronecan_type.kind == dronecan_type.KIND_MESSAGE
+        return 'struct %s' % (underscored_name(dronecan_type))
+    elif dronecan_type.category == dronecan_type.CATEGORY_PRIMITIVE:
+        if dronecan_type.kind == dronecan_type.KIND_BOOLEAN:
             return 'bool'
-        elif uavcan_type.kind == uavcan_type.KIND_UNSIGNED_INT:
-            return c_uint_type_from_bitlen(uavcan_type.bitlen)
-        elif uavcan_type.kind == uavcan_type.KIND_SIGNED_INT:
-            return c_int_type_from_bitlen(uavcan_type.bitlen)
-        elif uavcan_type.kind == uavcan_type.KIND_FLOAT:
-            return 'float' if uavcan_type.bitlen <= 32 else 'double'
+        elif dronecan_type.kind == dronecan_type.KIND_UNSIGNED_INT:
+            return c_uint_type_from_bitlen(dronecan_type.bitlen)
+        elif dronecan_type.kind == dronecan_type.KIND_SIGNED_INT:
+            return c_int_type_from_bitlen(dronecan_type.bitlen)
+        elif dronecan_type.kind == dronecan_type.KIND_FLOAT:
+            return 'float' if dronecan_type.bitlen <= 32 else 'double'
 
 def field_cdef(field):
     assert field.type.category != field.type.CATEGORY_VOID
     if field.type.category == field.type.CATEGORY_ARRAY:
         if field.type.mode == field.type.MODE_STATIC:
-            return '%s %s[%u]' % (uavcan_type_to_ctype(field.type.value_type), field.name, field.type.max_size)
+            return '%s %s[%u]' % (dronecan_type_to_ctype(field.type.value_type), field.name, field.type.max_size)
         else:
-            return 'struct { uint%u_t len; %s data[%u]; }%s' % (c_int_type_bitlen(array_len_field_bitlen(field.type)), uavcan_type_to_ctype(field.type.value_type), field.type.max_size, field.name)
+            return 'struct { uint%u_t len; %s data[%u]; }%s' % (c_int_type_bitlen(array_len_field_bitlen(field.type)), dronecan_type_to_ctype(field.type.value_type), field.type.max_size, field.name)
     else:
-        return '%s %s' % (uavcan_type_to_ctype(field.type), field.name)
+        return '%s %s' % (dronecan_type_to_ctype(field.type), field.name)
 
 def field_get_data(field):
     assert field.type.category == field.type.CATEGORY_ARRAY
@@ -183,66 +183,66 @@ def indent(string, n):
     return string
 
 def msg_header_name_request(obj):
-    if isinstance(obj, uavcan.dsdl.Field):
+    if isinstance(obj, dronecan.dsdl.Field):
         obj = obj.type
     assert obj.category == obj.CATEGORY_COMPOUND and obj.kind == obj.KIND_SERVICE
     return '%s_req.h' % (obj.full_name,)
 
 def msg_header_name_response(obj):
-    if isinstance(obj, uavcan.dsdl.Field):
+    if isinstance(obj, dronecan.dsdl.Field):
         obj = obj.type
     assert obj.category == obj.CATEGORY_COMPOUND and obj.kind == obj.KIND_SERVICE
     return '%s_res.h' % (obj.full_name,)
 
 def msg_header_name(obj):
-    if isinstance(obj, uavcan.dsdl.Field):
+    if isinstance(obj, dronecan.dsdl.Field):
         obj = obj.type
     return '%s.h' % (obj.full_name,)
 
 def msg_c_file_name_request(obj):
-    if isinstance(obj, uavcan.dsdl.Field):
+    if isinstance(obj, dronecan.dsdl.Field):
         obj = obj.type
     assert obj.category == obj.CATEGORY_COMPOUND and obj.kind == obj.KIND_SERVICE
     return '%s_req.c' % (obj.full_name,)
 
 def msg_c_file_name_response(obj):
-    if isinstance(obj, uavcan.dsdl.Field):
+    if isinstance(obj, dronecan.dsdl.Field):
         obj = obj.type
     assert obj.category == obj.CATEGORY_COMPOUND and obj.kind == obj.KIND_SERVICE
     return '%s_res.c' % (obj.full_name,)
 
 def msg_c_file_name(obj):
-    if isinstance(obj, uavcan.dsdl.Field):
+    if isinstance(obj, dronecan.dsdl.Field):
         obj = obj.type
     return '%s.c' % (obj.full_name,)
 
 def msg_test_file_name(obj):
-    if isinstance(obj, uavcan.dsdl.Field):
+    if isinstance(obj, dronecan.dsdl.Field):
         obj = obj.type
     return 'test_%s.cpp' % (obj.full_name,)
 
 def msg_test_file_name_request(obj):
-    if isinstance(obj, uavcan.dsdl.Field):
+    if isinstance(obj, dronecan.dsdl.Field):
         obj = obj.type
     return 'test_%s_request.cpp' % (obj.full_name,)
 
 def msg_test_file_name_response(obj):
-    if isinstance(obj, uavcan.dsdl.Field):
+    if isinstance(obj, dronecan.dsdl.Field):
         obj = obj.type
     return 'test_%s_response.cpp' % (obj.full_name,)
 
 def msg_test_makefile_name(obj):
-    if isinstance(obj, uavcan.dsdl.Field):
+    if isinstance(obj, dronecan.dsdl.Field):
         obj = obj.type
     return 'test_%s.mk' % (obj.full_name,)
 
 def msg_test_makefile_name_request(obj):
-    if isinstance(obj, uavcan.dsdl.Field):
+    if isinstance(obj, dronecan.dsdl.Field):
         obj = obj.type
     return 'test_%s_request.mk' % (obj.full_name,)
 
 def msg_test_makefile_name_response(obj):
-    if isinstance(obj, uavcan.dsdl.Field):
+    if isinstance(obj, dronecan.dsdl.Field):
         obj = obj.type
     return 'test_%s_response.mk' % (obj.full_name,)
 

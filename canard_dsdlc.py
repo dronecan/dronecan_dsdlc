@@ -13,8 +13,8 @@ import em
 import shutil
 
 sys.path.insert(0, os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), "../pyuavcan/"))
-import uavcan.dsdl
+    os.path.dirname(os.path.realpath(__file__)), "../pydronecan/"))
+import dronecan.dsdl
 
 from canard_dsdlc_helpers import *
 from canard_dsdlc_tester import *
@@ -69,7 +69,7 @@ build_dir = os.path.abspath(args.output)
 os.chdir(os.path.dirname(__file__))
 templates_dir = 'templates'
 
-messages = uavcan.dsdl.parse_namespaces(namespace_paths)
+messages = dronecan.dsdl.parse_namespaces(namespace_paths)
 message_dict = {}
 builtlist = set()
 
@@ -181,7 +181,7 @@ if __name__ == '__main__':
 
     assert not buildlist-builtlist, "%s not built" % (buildlist-builtlist,)
 
-    with open(os.path.join(build_dir+'/include/', 'uavcan_msgs.h'), 'w') as f:
+    with open(os.path.join(build_dir+'/include/', 'dronecan_msgs.h'), 'w') as f:
         f.write('#pragma once\n')
         for msg_name in sorted(builtlist):
             include_line = '#include "%s.h"' % (msg_name,)

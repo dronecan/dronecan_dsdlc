@@ -1,4 +1,4 @@
-This folder contains the generator for the UAVCAN protocol. The generator itself is
+This folder contains the generator for the DroneCAN protocol. The generator itself is
 (L)GPL v3 licensed, while the generated code is subject to different licenses:
 
 
