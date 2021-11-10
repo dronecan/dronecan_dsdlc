@@ -1,4 +1,4 @@
-@{from canard_dsdlc_helpers import *}@
+@{from dronecan_dsdlc_helpers import *}@
 INC=-I../include
 INC+=-I@(get_canard_inc())
 INC+=-I.

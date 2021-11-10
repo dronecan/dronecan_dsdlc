@@ -1,4 +1,4 @@
-@{from canard_dsdlc_helpers import *}@
+@{from dronecan_dsdlc_helpers import *}@
 @{indent = 0}@{ind = '    '*indent}@
 #include <uavcan_msgs.h>
 #include <iostream>

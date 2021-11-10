@@ -1,4 +1,4 @@
-@{from canard_dsdlc_helpers import *}@
+@{from dronecan_dsdlc_helpers import *}@
 #pragma once
 #include <stdbool.h>
 #include <stdint.h>
