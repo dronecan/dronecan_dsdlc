@@ -247,7 +247,7 @@ def msg_test_makefile_name_response(obj):
     return 'test_%s_response.mk' % (obj.full_name,)
 
 def get_canard_src():
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'modules/libcanard/canard.c'))
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'libcanard/canard.c'))
 
 def get_canard_inc():
     return os.path.dirname(get_canard_src())
