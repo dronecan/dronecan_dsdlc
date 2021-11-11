@@ -48,7 +48,7 @@ bool @(msg_underscored_name)_decode(const CanardRxTransfer* transfer, @(msg_c_ty
 @[        elif field.type.kind == field.type.KIND_FLOAT]@
 @(ind)msg.@(field.name) = random_float_val();
 @[        else]@
-@(ind)msg.@(field.name) = (@(uavcan_type_to_ctype(field.type)))random_bitlen_@('signed' if uavcan_type_is_signed(field.type) else 'unsigned')_val(@(field.type.bitlen));
+@(ind)msg.@(field.name) = (@(dronecan_type_to_ctype(field.type)))random_bitlen_@('signed' if dronecan_type_is_signed(field.type) else 'unsigned')_val(@(field.type.bitlen));
 @[        end if]@
 @[      elif field.type.category == field.type.CATEGORY_ARRAY]@
 @[        if field.type.mode == field.type.MODE_DYNAMIC]@
@@ -64,7 +64,7 @@ bool @(msg_underscored_name)_decode(const CanardRxTransfer* transfer, @(msg_c_ty
 @[          elif field.type.value_type.kind == field.type.value_type.KIND_FLOAT]@
 @(ind)msg.@(field_get_data(field))[i] = random_float_val();
 @[          else]@
-@(ind)msg.@(field_get_data(field))[i] = (@(uavcan_type_to_ctype(field.type.value_type)))random_bitlen_@('signed' if uavcan_type_is_signed(field.type.value_type) else 'unsigned')_val(@(field.type.value_type.bitlen));
+@(ind)msg.@(field_get_data(field))[i] = (@(dronecan_type_to_ctype(field.type.value_type)))random_bitlen_@('signed' if dronecan_type_is_signed(field.type.value_type) else 'unsigned')_val(@(field.type.value_type.bitlen));
 @[          end if]@
 @[        elif field.type.value_type.category == field.type.value_type.CATEGORY_COMPOUND]@
 @(ind)msg.@(field_get_data(field))[i] = sample_@(underscored_name(field.type.value_type))_msg();

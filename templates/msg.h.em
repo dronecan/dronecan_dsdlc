@@ -171,11 +171,11 @@ void _@(msg_underscored_name)_decode(const CanardRxTransfer* transfer, uint32_t*
 @[        if field.type.kind == field.type.KIND_FLOAT and field.type.bitlen == 16]@
 @(ind){
 @(ind)    uint16_t float16_val;
-@(ind)    canardDecodeScalar(transfer, *bit_ofs, @(field.type.bitlen), @('true' if uavcan_type_is_signed(field.type) else 'false'), &float16_val);
+@(ind)    canardDecodeScalar(transfer, *bit_ofs, @(field.type.bitlen), @('true' if dronecan_type_is_signed(field.type) else 'false'), &float16_val);
 @(ind)    msg->@(field.name) = canardConvertFloat16ToNativeFloat(float16_val);
 @(ind)}
 @[        else]@
-@(ind)canardDecodeScalar(transfer, *bit_ofs, @(field.type.bitlen), @('true' if uavcan_type_is_signed(field.type) else 'false'), &msg->@(field.name));
+@(ind)canardDecodeScalar(transfer, *bit_ofs, @(field.type.bitlen), @('true' if dronecan_type_is_signed(field.type) else 'false'), &msg->@(field.name));
 @[        end if]@
 @(ind)*bit_ofs += @(field.type.bitlen);
 @[      elif field.type.category == field.type.CATEGORY_ARRAY]@
@@ -221,11 +221,11 @@ msg->@(field.name).len = 0;
 @[          if field.type.value_type.kind == field.type.value_type.KIND_FLOAT and field.type.value_type.bitlen == 16]@
 @(ind){
 @(ind)    uint16_t float16_val;
-@(ind)    canardDecodeScalar(transfer, *bit_ofs, @(field.type.value_type.bitlen), @('true' if uavcan_type_is_signed(field.type.value_type) else 'false'), &float16_val);
+@(ind)    canardDecodeScalar(transfer, *bit_ofs, @(field.type.value_type.bitlen), @('true' if dronecan_type_is_signed(field.type.value_type) else 'false'), &float16_val);
 @(ind)    msg->@(field_get_data(field))[i] = canardConvertFloat16ToNativeFloat(float16_val);
 @(ind)}
 @[          else]@
-@(ind)canardDecodeScalar(transfer, *bit_ofs, @(field.type.value_type.bitlen), @('true' if uavcan_type_is_signed(field.type.value_type) else 'false'), &msg->@(field_get_data(field))[i]);
+@(ind)canardDecodeScalar(transfer, *bit_ofs, @(field.type.value_type.bitlen), @('true' if dronecan_type_is_signed(field.type.value_type) else 'false'), &msg->@(field_get_data(field))[i]);
 @[          end if]@
 @(ind)*bit_ofs += @(field.type.value_type.bitlen);
 @[        elif field.type.value_type.category == field.type.value_type.CATEGORY_COMPOUND]@

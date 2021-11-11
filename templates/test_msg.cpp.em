@@ -1,6 +1,6 @@
 @{from dronecan_dsdlc_helpers import *}@
 @{indent = 0}@{ind = '    '*indent}@
-#include <uavcan_msgs.h>
+#include <dronecan_msgs.h>
 #include <iostream>
 #include <vector>
 #include <string>
