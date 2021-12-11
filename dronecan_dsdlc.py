@@ -172,7 +172,7 @@ if __name__ == '__main__':
         buildlist = set()
         for msg_name in [msg.full_name for msg in messages]:
             buildlist.add(msg_name)
-            print('expanding %s' % (msg_name,))
+            # print('expanding %s' % (msg_name,))
             # expand_message(msg_name)
             # append_builtlist(msg_name)
             results.append(pool.apply_async(expand_message, (msg_name,), callback=append_builtlist))
