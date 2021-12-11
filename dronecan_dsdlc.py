@@ -163,10 +163,11 @@ if __name__ == '__main__':
 
     pool = Pool()
 
+    results = []
     if buildlist is not None:
         for msg_name in buildlist:
             builtlist.add(msg_name)
-            pool.apply_async(expand_message, (msg_name,), callback=append_builtlist)
+            results.append(pool.apply_async(expand_message, (msg_name,), callback=append_builtlist))
     else:
         buildlist = set()
         for msg_name in [msg.full_name for msg in messages]:
@@ -174,10 +175,22 @@ if __name__ == '__main__':
             print('expanding %s' % (msg_name,))
             # expand_message(msg_name)
             # append_builtlist(msg_name)
-            pool.apply_async(expand_message, (msg_name,), callback=append_builtlist)
+            results.append(pool.apply_async(expand_message, (msg_name,), callback=append_builtlist))
 
     pool.close()
     pool.join()
+
+    if len(buildlist-builtlist):
+        seen_no_attribute_error = False
+        for result in results:
+            try:
+                x = result.get()
+            except AttributeError as ex:
+                print("Caught exception! %s" % str(ex))
+                if "module 'em' has no attribute 'expand'" in str(ex):
+                    seen_no_attribute_error = True
+        if seen_no_attribute_error:
+            print("############ try installing 'empy' rather than 'em' Python module")
 
     assert not buildlist-builtlist, "%s not built" % (buildlist-builtlist,)
 
