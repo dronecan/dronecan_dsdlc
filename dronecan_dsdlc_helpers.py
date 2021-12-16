@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 '''
-Copyright Jonathan Chalinger, 2021
+Copyright Jonathan Challinger, 2021
 Copyright Siddharth Bharat Purohit, CubePilot Pty. Ltd. 2021
 Released under GNU GPL version 3 or later
 '''
