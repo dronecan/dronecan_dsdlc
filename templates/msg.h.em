@@ -57,7 +57,11 @@ enum @(msg_underscored_name)_type_t {
 @[  end if]@
 };
 
-uint32_t @(msg_underscored_name)_encode(@(msg_c_type)* msg, uint8_t* buffer);
+uint32_t @(msg_underscored_name)_encode(@(msg_c_type)* msg, uint8_t* buffer
+#if CANARD_ENABLE_TAO_OPTION
+    , bool tao
+#endif
+);
 bool @(msg_underscored_name)_decode(const CanardRxTransfer* transfer, @(msg_c_type)* msg);
 
 #if defined(CANARD_DSDLC_INTERNAL)
