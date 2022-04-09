@@ -11,7 +11,7 @@ for field in msg_fields:
     if field.type.category == field.type.CATEGORY_ARRAY and field.type.value_type.category == field.type.value_type.CATEGORY_COMPOUND:
         dep_headers.add(msg_header_name(field.type.value_type))
 }@
-@[  for header in dep_headers]@
+@[  for header in sorted(dep_headers)]@
 #include <@(header)>
 @[  end for]@
 
