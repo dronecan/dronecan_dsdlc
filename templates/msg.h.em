@@ -202,6 +202,7 @@ void _@(msg_underscored_name)_decode(const CanardRxTransfer* transfer, uint32_t*
 
 @[          end if]@
 @[              if field.type.value_type.category == field.type.value_type.CATEGORY_COMPOUND]@
+@[                  if field == msg_fields[-1] and field.type.value_type.get_min_bitlen() >= 8]@
 
 @(ind)if (tao) {
 @{indent += 1}@{ind = '    '*indent}@
@@ -214,6 +215,9 @@ void _@(msg_underscored_name)_decode(const CanardRxTransfer* transfer, uint32_t*
 @(ind)}
 @{indent -= 1}@{ind = '    '*indent}@
 @(ind)} else {
+@[                  else]@
+@(ind){
+@[                  end if]@
 @{indent += 1}@{ind = '    '*indent}@
 @[              end if]@
 @(ind)for (size_t i=0; i < msg->@(field.name).len; i++) {
