@@ -205,8 +205,8 @@ void _@(msg_underscored_name)_decode(const CanardRxTransfer* transfer, uint32_t*
 
 @(ind)if (tao) {
 @{indent += 1}@{ind = '    '*indent}@
-msg->@(field.name).len = 0;
-@(ind)while (((transfer->payload_len*8)-*bit_ofs) > 0) {
+@(ind)msg->@(field.name).len = 0;
+@(ind)while ((transfer->payload_len*8) > *bit_ofs) {
 @{indent += 1}@{ind = '    '*indent}@
 @(ind)_@(underscored_name(field.type.value_type))_decode(transfer, bit_ofs, &msg->@(field_get_data(field))[msg->@(field.name).len], @[if field == msg_fields[-1] and field.type.value_type.get_min_bitlen() < 8]tao && i==msg->@(field.name).len@[else]false@[end if]@);
 @(ind)msg->@(field.name).len++;
