@@ -89,7 +89,7 @@ void _@(msg_underscored_name)_encode(uint8_t* buffer, uint32_t* bit_ofs, @(msg_c
 @{indent += 1}@{ind = '    '*indent}@
 @[      end if]@
 @[      if field.type.category == field.type.CATEGORY_COMPOUND]@
-@(ind)_@(underscored_name(field.type))_encode(buffer, bit_ofs, &msg->@(field.name), @('tao' if field == msg_fields[-1] else 'false'));
+@(ind)_@(underscored_name(field.type))_encode(buffer, bit_ofs, &msg->@(field.name), @('tao' if (field == msg_fields[-1] or msg_union) else 'false'));
 @[      elif field.type.category == field.type.CATEGORY_PRIMITIVE]@
 @[        if field.type.kind == field.type.KIND_FLOAT and field.type.bitlen == 16]@
 @(ind){
@@ -170,7 +170,7 @@ void _@(msg_underscored_name)_decode(const CanardRxTransfer* transfer, uint32_t*
 @{indent += 1}@{ind = '    '*indent}@
 @[      end if]@
 @[      if field.type.category == field.type.CATEGORY_COMPOUND]@
-@(ind)_@(underscored_name(field.type))_decode(transfer, bit_ofs, &msg->@(field.name), @('tao' if field == msg_fields[-1] else 'false'));
+@(ind)_@(underscored_name(field.type))_decode(transfer, bit_ofs, &msg->@(field.name), @('tao' if (field == msg_fields[-1] or msg_union) else 'false'));
 @[      elif field.type.category == field.type.CATEGORY_PRIMITIVE]@
 @[        if field.type.kind == field.type.KIND_FLOAT and field.type.bitlen == 16]@
 @(ind){
