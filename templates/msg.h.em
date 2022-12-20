@@ -158,7 +158,7 @@ void _@(msg_underscored_name)_decode(const CanardRxTransfer* transfer, uint32_t*
 @[  if msg_union]@
 @(ind)@(union_msg_tag_uint_type_from_num_fields(len(msg_fields))) union_tag;
 @(ind)canardDecodeScalar(transfer, *bit_ofs, @(union_msg_tag_bitlen_from_num_fields(len(msg_fields))), false, &union_tag);
-@(ind)msg->union_tag = union_tag;
+@(ind)msg->union_tag = (enum @(msg_underscored_name)_type_t)union_tag;
 @(ind)*bit_ofs += @(union_msg_tag_bitlen_from_num_fields(len(msg_fields)));
 
 @(ind)switch(msg->union_tag) {
@@ -267,4 +267,13 @@ void _@(msg_underscored_name)_decode(const CanardRxTransfer* transfer, uint32_t*
 #endif
 #ifdef __cplusplus
 } // extern "C"
+
+#ifdef DRONECAN_CXX_WRAPPERS
+#include <canard/cxx_wrappers.h>
+@[if msg_default_dtid is not None]@
+@[  if msg_kind == "broadcast"]@
+BROADCAST_MESSAGE_CXX_IFACE(@(msg_cpp_type), @(msg_define_name.upper())_ID, @(msg_define_name.upper())_SIGNATURE, @(msg_define_name.upper())_MAX_SIZE);
+@[  end if]@
+@[end if]@
+#endif
 #endif
