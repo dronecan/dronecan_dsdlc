@@ -111,7 +111,7 @@ def expand_message(msg_name):
     for template in templates:
         output = ''
         if msg.kind == msg.KIND_SERVICE and template['type'] == 'service_header':
-            output = em.expand(service_header_template, msg=msg)
+            output = em.expand(service_header_template, {"msg": msg})
         elif msg.kind == msg.KIND_SERVICE and template['type'] == 'response_header':
             output = em.expand(msg_header_template, get_empy_env_response(msg))
         elif msg.kind == msg.KIND_SERVICE and template['type'] == 'request_header':
@@ -139,7 +139,7 @@ def expand_message(msg_name):
         if not output.strip():
             continue
 
-        output_file = os.path.join(build_dir, em.expand('@{from dronecan_dsdlc_helpers import *}'+template['output_file'], msg=msg))
+        output_file = os.path.join(build_dir, em.expand('@{from dronecan_dsdlc_helpers import *}'+template['output_file'], {"msg": msg}))
         mkdir_p(os.path.dirname(output_file))
         with open(output_file, 'wb') as f:
             f.write(output.encode("utf-8"))
