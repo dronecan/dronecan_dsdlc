@@ -144,7 +144,7 @@ void _@(msg_underscored_name)_encode(uint8_t* buffer, uint32_t* bit_ofs, @(msg_c
 @[          end if]@
 @(ind)*bit_ofs += @(field.type.value_type.bitlen);
 @[        elif field.type.value_type.category == field.type.value_type.CATEGORY_COMPOUND]@
-@(ind)_@(underscored_name(field.type.value_type))_encode(buffer, bit_ofs, &msg->@(field_get_data(field))[i], @[if field == msg_fields[-1] and field.type.value_type.get_min_bitlen() < 8]tao && i==msg->@(field.name).len@[else]false@[end if]@);
+@(ind)_@(underscored_name(field.type.value_type))_encode(buffer, bit_ofs, &msg->@(field_get_data(field))[i], @[if field == msg_fields[-1] and field.type.value_type.get_min_bitlen() < 8]tao && i==msg->@(field.name).len@[else]false@[end if]);
 @[        end if]@
 @{indent -= 1}@{ind = '    '*indent}@
 @(ind)}
@@ -235,7 +235,7 @@ bool _@(msg_underscored_name)_decode(const CanardRxTransfer* transfer, uint32_t*
 @(ind)uint32_t max_bits = (transfer->payload_len*8)-7; // TAO elements must be >= 8 bits
 @(ind)while (max_bits > *bit_ofs) {
 @{indent += 1}@{ind = '    '*indent}@
-@(ind)if (!max_len-- || _@(underscored_name(field.type.value_type))_decode(transfer, bit_ofs, &msg->@(field_get_data(field))[msg->@(field.name).len], @[if field == msg_fields[-1] and field.type.value_type.get_min_bitlen() < 8]tao && i==msg->@(field.name).len@[else]false@[end if]@)) {return true;}
+@(ind)if (!max_len-- || _@(underscored_name(field.type.value_type))_decode(transfer, bit_ofs, &msg->@(field_get_data(field))[msg->@(field.name).len], @[if field == msg_fields[-1] and field.type.value_type.get_min_bitlen() < 8]tao && i==msg->@(field.name).len@[else]false@[end if])) {return true;}
 @(ind)msg->@(field.name).len++;
 @{indent -= 1}@{ind = '    '*indent}@
 @(ind)}
@@ -269,7 +269,7 @@ bool _@(msg_underscored_name)_decode(const CanardRxTransfer* transfer, uint32_t*
 @[          end if]@
 @(ind)*bit_ofs += @(field.type.value_type.bitlen);
 @[        elif field.type.value_type.category == field.type.value_type.CATEGORY_COMPOUND]@
-@(ind)if (_@(underscored_name(field.type.value_type))_decode(transfer, bit_ofs, &msg->@(field_get_data(field))[i], @[if field == msg_fields[-1] and field.type.value_type.get_min_bitlen() < 8]tao && i==msg->@(field.name).len@[else]false@[end if]@)) {return true;}
+@(ind)if (_@(underscored_name(field.type.value_type))_decode(transfer, bit_ofs, &msg->@(field_get_data(field))[i], @[if field == msg_fields[-1] and field.type.value_type.get_min_bitlen() < 8]tao && i==msg->@(field.name).len@[else]false@[end if])) {return true;}
 @[        end if]@
 @{indent -= 1}@{ind = '    '*indent}@
 @(ind)}
