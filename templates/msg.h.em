@@ -15,10 +15,6 @@ for field in msg_fields:
 #include <@(header)>
 @[  end for]@
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
 
 #define @(msg_define_name.upper())_MAX_SIZE @(int((msg_max_bitlen+7)/8))
 #define @(msg_define_name.upper())_SIGNATURE @('(0x%08XULL)' % (msg_dt_sig,))
@@ -38,7 +34,18 @@ enum @(msg_underscored_name)_type_t {
 };
 @[  end if]@
 
+@[if msg_default_dtid is not None]@
+#if defined(__cplusplus) && defined(DRONECAN_CXX_WRAPPERS)
+class @(underscored_name(msg))_cxx_iface;
+#endif
+@[end if]@
+
 @(msg_c_type) {
+@[if msg_default_dtid is not None]@
+#if defined(__cplusplus) && defined(DRONECAN_CXX_WRAPPERS)
+    using cxx_iface = @(underscored_name(msg))_cxx_iface;
+#endif
+@[end if]@
 @[  if msg_union]@
     enum @(msg_underscored_name)_type_t union_tag;
     union {
@@ -56,6 +63,11 @@ enum @(msg_underscored_name)_type_t {
 @[    end for]@
 @[  end if]@
 };
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 uint32_t @(msg_underscored_name)_encode(@(msg_c_type)* msg, uint8_t* buffer
 #if CANARD_ENABLE_TAO_OPTION
