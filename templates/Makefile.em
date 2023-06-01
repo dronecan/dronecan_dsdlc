@@ -4,8 +4,8 @@ INC+=-I@(get_canard_inc())
 INC+=-I.
 CXX=g++
 CC=gcc
-CFLAGS=-Wall -Wextra -Werror -m32 -std=c99 -DCANARD_DSDLC_TEST_BUILD $(INC)
-CXXFLAGS=-Wall -Wextra -Werror -m32 -std=c++11 -DCANARD_DSDLC_TEST_BUILD $(INC)
+CFLAGS=-Wall -Wextra -Werror -std=c99 -DCANARD_DSDLC_TEST_BUILD $(INC)
+CXXFLAGS=-Wall -Wextra -Werror -std=c++11 -DCANARD_DSDLC_TEST_BUILD $(INC)
 LDFLAGS=-lstdc++
 
 # get test name from Makefile name
