@@ -12,9 +12,12 @@ import argparse
 import em
 import shutil
 
-sys.path.insert(0, os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), "../pydronecan/"))
-import dronecan.dsdl
+try:
+    import dronecan.dsdl
+except Exception as ex:
+    print(ex)
+    print("Failed to import dronecan.dsdl, please install dronecan with 'python3 -m pip install dronecan'")
+    sys.exit(1)
 
 from dronecan_dsdlc_helpers import *
 from dronecan_dsdlc_tester import *
@@ -66,8 +69,7 @@ if args.build:
 namespace_paths = [os.path.abspath(path) for path in args.namespace_dir]
 build_dir = os.path.abspath(args.output)
 
-os.chdir(os.path.dirname(__file__))
-templates_dir = 'templates'
+templates_dir = os.path.join(os.path.dirname(__file__), 'templates')
 
 messages = dronecan.dsdl.parse_namespaces(namespace_paths)
 message_dict = {}
