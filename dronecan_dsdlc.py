@@ -191,6 +191,8 @@ if __name__ == '__main__':
                 print("Caught exception! %s" % str(ex))
                 if "module 'em' has no attribute 'expand'" in str(ex):
                     seen_no_attribute_error = True
+                else:
+                    raise ex
         if seen_no_attribute_error:
             print("############ try installing 'empy' rather than 'em' Python module")
 
