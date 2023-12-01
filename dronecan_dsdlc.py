@@ -96,6 +96,8 @@ with open(os.path.join(templates_dir, 'Makefile.em'), 'rb') as f:
     test_mk_template = f.read().decode("utf-8")
 
 
+os.environ["EMPY_RAW_ERRORS"] = "1"
+
 # expand source files and test files for messages
 def expand_message(msg_name):
     print('expanding %s' % (msg_name,))
