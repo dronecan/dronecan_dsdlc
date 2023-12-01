@@ -98,6 +98,12 @@ with open(os.path.join(templates_dir, 'Makefile.em'), 'rb') as f:
 
 os.environ["EMPY_RAW_ERRORS"] = "1"
 
+def em_expand(em, template, _globals):
+    (empy_ver_major, *rest) = em.__version__.split('.')
+    if empy_ver_major == "4":
+        return em.expand(template, globals=_globals)
+    return em.expand(template, _globals)
+
 # expand source files and test files for messages
 def expand_message(msg_name):
     print('expanding %s' % (msg_name,))
@@ -108,29 +114,29 @@ def expand_message(msg_name):
         if msg.kind == msg.KIND_SERVICE and template['type'] == 'service_header':
             output = em.expand(service_header_template, msg=msg)
         elif msg.kind == msg.KIND_SERVICE and template['type'] == 'response_header':
-            output = em.expand(msg_header_template, get_empy_env_response(msg))
+            output = em_expand(em, msg_header_template, get_empy_env_response(msg))
         elif msg.kind == msg.KIND_SERVICE and template['type'] == 'request_header':
-            output = em.expand(msg_header_template, get_empy_env_request(msg))
+            output = em_expand(em, msg_header_template, get_empy_env_request(msg))
         elif msg.kind == msg.KIND_MESSAGE and template['type'] == 'broadcast_header':
-            output = em.expand(msg_header_template, get_empy_env_broadcast(msg))
+            output = em_expand(em, msg_header_template, get_empy_env_broadcast(msg))
         elif msg.kind == msg.KIND_SERVICE and template['type'] == 'response_src':
-            output = em.expand(msg_source_template, get_empy_env_response(msg))
+            output = em_expand(em, msg_source_template, get_empy_env_response(msg))
         elif msg.kind == msg.KIND_SERVICE and template['type'] == 'request_src':
-            output = em.expand(msg_source_template, get_empy_env_request(msg))
+            output = em_expand(em, msg_source_template, get_empy_env_request(msg))
         elif msg.kind == msg.KIND_MESSAGE and template['type'] == 'broadcast_src':
-            output = em.expand(msg_source_template, get_empy_env_broadcast(msg))
+            output = em_expand(em, msg_source_template, get_empy_env_broadcast(msg))
         elif msg.kind == msg.KIND_SERVICE and template['type'] == 'test_response_src':
-            output = em.expand(test_src_template, get_empy_env_response(msg))
+            output = em_expand(em, test_src_template, get_empy_env_response(msg))
         elif msg.kind == msg.KIND_SERVICE and template['type'] == 'test_request_src':
-            output = em.expand(test_src_template, get_empy_env_request(msg))
+            output = em_expand(em, test_src_template, get_empy_env_request(msg))
         elif msg.kind == msg.KIND_MESSAGE and template['type'] == 'test_broadcast_src':
-            output = em.expand(test_src_template, get_empy_env_broadcast(msg))
+            output = em_expand(em, test_src_template, get_empy_env_broadcast(msg))
         elif msg.kind == msg.KIND_SERVICE and template['type'] == 'Makefile_response':
-            output = em.expand(test_mk_template, get_empy_env_response(msg))
+            output = em_expand(em, test_mk_template, get_empy_env_response(msg))
         elif msg.kind == msg.KIND_SERVICE and template['type'] == 'Makefile_request':
-            output = em.expand(test_mk_template, get_empy_env_request(msg))
+            output = em_expand(em, test_mk_template, get_empy_env_request(msg))
         elif msg.kind == msg.KIND_MESSAGE and template['type'] == 'Makefile_broadcast':
-            output = em.expand(test_mk_template, get_empy_env_broadcast(msg))
+            output = em_expand(em, test_mk_template, get_empy_env_broadcast(msg))
         if not output.strip():
             continue
 
