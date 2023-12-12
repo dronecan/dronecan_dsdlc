@@ -11,7 +11,7 @@ import sys
 import subprocess
 import pexpect
 sys.path.insert(0, os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), "../pydronecan/"))
+    os.path.dirname(os.path.realpath(__file__)), "./tests/pydronecan/"))
 import dronecan
 
 from dronecan_dsdlc_helpers import *
