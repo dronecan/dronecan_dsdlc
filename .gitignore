@@ -79,6 +79,6 @@ target/
 .history
 
 # Testing files
-tests/DSDL/
-tests/dsdl_generated/
-.venv/
+DSDL
+dsdl_generated
+libcanard

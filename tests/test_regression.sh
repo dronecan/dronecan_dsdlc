@@ -4,12 +4,23 @@
 set -e
 set -x
 
-# test compiler on linux
-python3 -m pip install -U empy pexpect dronecan
-rm -rf DSDL
+SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
+PYENV=$SCRIPT_DIR/.pyenv
 
-git clone https://github.com/DroneCAN/DSDL
-(cd .. && git clone https://github.com/DroneCAN/libcanard)
+# Set python executable for your environment here
+PY=python3
+
+# Python virtual environment
+$PY -m venv $PYENV
+source $PYENV/bin/activate
+
+# test compiler on linux
+$PY -m pip install -r requirements.txt
+rm -rf $SCRIPT_DIR/DSDL
+rm -rf $SCRIPT_DIR/libcanard
+
+git clone https://github.com/DroneCAN/DSDL $SCRIPT_DIR/DSDL
+git clone https://github.com/DroneCAN/libcanard $SCRIPT_DIR/libcanard
 
 echo "Testing generation with regression testing"
-python3 dronecan_dsdlc.py --output dsdl_generated DSDL/dronecan DSDL/uavcan DSDL/com DSDL/ardupilot --run-test
+$PY dronecan_dsdlc.py --output $SCRIPT_DIR/dsdl_generated $SCRIPT_DIR/DSDL/dronecan $SCRIPT_DIR/DSDL/uavcan $SCRIPT_DIR/DSDL/com $SCRIPT_DIR/DSDL/ardupilot --run-test

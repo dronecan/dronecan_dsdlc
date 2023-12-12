@@ -26,11 +26,15 @@ To run the test simply execute the following command
 python dronecan_dsdlc/dronecan_dsdlc.py -O <output directory> <list of namespace dirs> --run-test
 ```
 
-Some tests are available in the './tests' folder. Run them to test your environment.
+Some tests are available in the 'tests' folder. Run them to test your environment.
 
 ```
-# Windows
-cd tests
-./test_windows.cmd
+# Linux
+./tests/test_linux.sh
 
+# Linux (Run regression test)
+./tests/test_regression.sh
+
+# Windows
+.\tests\test_windows.cmd
 ```
