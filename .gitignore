@@ -77,3 +77,8 @@ target/
 
 #history
 .history
+
+# Testing files
+tests/DSDL/
+tests/dsdl_generated/
+.venv/
