@@ -16,5 +16,9 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: dsdl_generated
-          path: dsdl_generated
+          path: |
+            tests/dsdl_generated/include/dronecan_msgs.h
+            tests/dsdl_generated/include/uavcan.Timestamp.h
+            tests/dsdl_generated/src/uavcan.Timestamp.c
+          if-no-files-found: error
           retention-days: 7

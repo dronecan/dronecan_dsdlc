@@ -13,7 +13,7 @@ import em
 import math
 import copy
 sys.path.insert(0, os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), "../pydronecan/"))
+    os.path.dirname(os.path.realpath(__file__)), "./tests/pydronecan/"))
 import dronecan
 
 class bcolors:
@@ -247,7 +247,7 @@ def msg_test_makefile_name_response(obj):
     return 'test_%s_response.mk' % (obj.full_name,)
 
 def get_canard_src():
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'libcanard/canard.c'))
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), '.', 'tests/libcanard/canard.c'))
 
 def get_canard_inc():
     return os.path.dirname(get_canard_src())

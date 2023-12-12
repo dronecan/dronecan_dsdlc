@@ -77,3 +77,8 @@ target/
 
 #history
 .history
+
+# Testing files
+DSDL
+dsdl_generated
+libcanard
