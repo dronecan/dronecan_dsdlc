@@ -266,7 +266,7 @@ bool _@(msg_underscored_name)_decode(const CanardRxTransfer* transfer, uint32_t*
 @[        end if]@
 @{indent -= 1}@{ind = '    '*indent}@
 @(ind)}
-@[              if field.type.value_type.category == field.type.value_type.CATEGORY_COMPOUND]@
+@[              if field.type.value_type.category == field.type.value_type.CATEGORY_COMPOUND and field.type.mode == field.type.MODE_DYNAMIC]@
 @{indent -= 1}@{ind = '    '*indent}@
 @(ind)}
 @[              end if]@
