@@ -117,7 +117,10 @@ int main() {
         .priority = 0,
         .source_node_id = 125,
     };
-    @(msg_underscored_name)_decode(&rx_transfer, &decoded_msg);
+    if (@(msg_underscored_name)_decode(&rx_transfer, &decoded_msg)) {
+        std::cout << "decode failed" << std::endl;
+        return 1;
+    }
 
     // compare decoded message with original message
     data_len = @(msg_underscored_name)_encode(&decoded_msg, buffer);
@@ -129,7 +132,8 @@ int main() {
     if (hex_str.compare(reencoded_hex_str) == 0) {
         std::cout << "Messages are equal" << std::endl;
     } else {
-        std::cout << "Messages are not equal" << std::endl;
+       std::cout << "Messages are not equal" << std::endl;
+       return 1;
     }
 
     return 0;
