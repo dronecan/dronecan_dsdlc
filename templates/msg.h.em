@@ -173,9 +173,6 @@ bool _@(msg_underscored_name)_decode(const CanardRxTransfer* transfer, uint32_t*
 @(ind)(void)bit_ofs;
 @(ind)(void)msg;
 @(ind)(void)tao;
-@(ind)if (tao && (transfer->payload_len > @(msg_define_name.upper())_MAX_SIZE)) {
-@(ind)    return true; /* invalid payload length */
-@(ind)}
 @[  if msg_union]@
 @(ind)@(union_msg_tag_uint_type_from_num_fields(len(msg_fields))) union_tag;
 @(ind)canardDecodeScalar(transfer, *bit_ofs, @(union_msg_tag_bitlen_from_num_fields(len(msg_fields))), false, &union_tag);
