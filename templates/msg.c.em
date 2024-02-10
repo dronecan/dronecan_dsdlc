@@ -32,6 +32,11 @@ uint32_t @(msg_underscored_name)_encode(@(msg_c_type)* msg, uint8_t* buffer
   return true if the decode is invalid
  */
 bool @(msg_underscored_name)_decode(const CanardRxTransfer* transfer, @(msg_c_type)* msg) {
+#if CANARD_ENABLE_TAO_OPTION
+    if (transfer->tao && (transfer->payload_len > @(msg_define_name.upper())_MAX_SIZE)) {
+        return true; /* invalid payload length */
+    }
+#endif
     uint32_t bit_ofs = 0;
     if (_@(msg_underscored_name)_decode(transfer, &bit_ofs, msg,
 #if CANARD_ENABLE_TAO_OPTION
@@ -40,7 +45,7 @@ bool @(msg_underscored_name)_decode(const CanardRxTransfer* transfer, @(msg_c_ty
     true
 #endif
     )) {
-        return true;
+        return true; /* invalid payload */
     }
 
     const uint32_t byte_len = (bit_ofs+7U)/8U;
