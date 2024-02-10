@@ -1,6 +1,6 @@
 # simple test of DSDL compilation for windows
 
-python3 -m pip install -U empy pexpect dronecan
+python3 -m pip install -U empy==3.3.4 pexpect dronecan
 
 git clone https://github.com/DroneCAN/DSDL
 
