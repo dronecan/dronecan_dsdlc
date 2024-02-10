@@ -33,13 +33,15 @@ uint32_t @(msg_underscored_name)_encode(@(msg_c_type)* msg, uint8_t* buffer
  */
 bool @(msg_underscored_name)_decode(const CanardRxTransfer* transfer, @(msg_c_type)* msg) {
     uint32_t bit_ofs = 0;
-    _@(msg_underscored_name)_decode(transfer, &bit_ofs, msg, 
+    if (_@(msg_underscored_name)_decode(transfer, &bit_ofs, msg,
 #if CANARD_ENABLE_TAO_OPTION
     transfer->tao
 #else
     true
 #endif
-    );
+    )) {
+        return true;
+    }
 
     const uint32_t byte_len = (bit_ofs+7U)/8U;
 #if CANARD_ENABLE_TAO_OPTION

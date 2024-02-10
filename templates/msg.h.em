@@ -79,7 +79,7 @@ bool @(msg_underscored_name)_decode(const CanardRxTransfer* transfer, @(msg_c_ty
 #if defined(CANARD_DSDLC_INTERNAL)
 @{indent = 0}@{ind = '    '*indent}@
 static inline void _@(msg_underscored_name)_encode(uint8_t* buffer, uint32_t* bit_ofs, @(msg_c_type)* msg, bool tao);
-static inline void _@(msg_underscored_name)_decode(const CanardRxTransfer* transfer, uint32_t* bit_ofs, @(msg_c_type)* msg, bool tao);
+static inline bool _@(msg_underscored_name)_decode(const CanardRxTransfer* transfer, uint32_t* bit_ofs, @(msg_c_type)* msg, bool tao);
 void _@(msg_underscored_name)_encode(uint8_t* buffer, uint32_t* bit_ofs, @(msg_c_type)* msg, bool tao) {
 @{indent += 1}@{ind = '    '*indent}@
 @(ind)(void)buffer;
@@ -124,10 +124,11 @@ void _@(msg_underscored_name)_encode(uint8_t* buffer, uint32_t* bit_ofs, @(msg_c
 @{indent -= 1}@{ind = '    '*indent}@
 @(ind)}
 @[          end if]@
-@(ind)if (msg->@(field.name).len > @(field.type.max_size)) {
-@(ind)    msg->@(field.name).len = @(field.type.max_size);
-@(ind)}
-@(ind)for (size_t i=0; i < msg->@(field.name).len; i++) {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wtype-limits"
+@(ind)const size_t @(field.name)_len = msg->@(field.name).len > @(field.type.max_size) ? @(field.type.max_size) : msg->@(field.name).len;
+#pragma GCC diagnostic pop
+@(ind)for (size_t i=0; i < @(field.name)_len; i++) {
 @[        else]@
 @(ind)for (size_t i=0; i < @(field.type.max_size); i++) {
 @[        end if]@
@@ -163,14 +164,17 @@ void _@(msg_underscored_name)_encode(uint8_t* buffer, uint32_t* bit_ofs, @(msg_c
 @{indent -= 1}@{ind = '    '*indent}@
 @(ind)}
 
-void _@(msg_underscored_name)_decode(const CanardRxTransfer* transfer, uint32_t* bit_ofs, @(msg_c_type)* msg, bool tao) {
+/*
+ decode @(msg_underscored_name), return true on failure, false on success
+*/
+bool _@(msg_underscored_name)_decode(const CanardRxTransfer* transfer, uint32_t* bit_ofs, @(msg_c_type)* msg, bool tao) {
 @{indent += 1}@{ind = '    '*indent}@
 @(ind)(void)transfer;
 @(ind)(void)bit_ofs;
 @(ind)(void)msg;
 @(ind)(void)tao;
 @(ind)if (tao && (transfer->payload_len > @(msg_define_name.upper())_MAX_SIZE)) {
-@(ind)    return;
+@(ind)    return true; /* invalid payload length */
 @(ind)}
 @[  if msg_union]@
 @(ind)@(union_msg_tag_uint_type_from_num_fields(len(msg_fields))) union_tag;
@@ -187,7 +191,7 @@ void _@(msg_underscored_name)_decode(const CanardRxTransfer* transfer, uint32_t*
 @{indent += 1}@{ind = '    '*indent}@
 @[      end if]@
 @[      if field.type.category == field.type.CATEGORY_COMPOUND]@
-@(ind)_@(underscored_name(field.type))_decode(transfer, bit_ofs, &msg->@(field.name), @('tao' if (field == msg_fields[-1] or msg_union) else 'false'));
+@(ind)if (_@(underscored_name(field.type))_decode(transfer, bit_ofs, &msg->@(field.name), @('tao' if (field == msg_fields[-1] or msg_union) else 'false'))) {return true;}
 @[      elif field.type.category == field.type.CATEGORY_PRIMITIVE]@
 @[        if field.type.kind == field.type.KIND_FLOAT and field.type.bitlen == 16]@
 @(ind){
@@ -226,7 +230,7 @@ void _@(msg_underscored_name)_decode(const CanardRxTransfer* transfer, uint32_t*
 @(ind)msg->@(field.name).len = 0;
 @(ind)while ((transfer->payload_len*8) > *bit_ofs) {
 @{indent += 1}@{ind = '    '*indent}@
-@(ind)_@(underscored_name(field.type.value_type))_decode(transfer, bit_ofs, &msg->@(field_get_data(field))[msg->@(field.name).len], @[if field == msg_fields[-1] and field.type.value_type.get_min_bitlen() < 8]tao && i==msg->@(field.name).len@[else]false@[end if]@);
+@(ind)if (_@(underscored_name(field.type.value_type))_decode(transfer, bit_ofs, &msg->@(field_get_data(field))[msg->@(field.name).len], @[if field == msg_fields[-1] and field.type.value_type.get_min_bitlen() < 8]tao && i==msg->@(field.name).len@[else]false@[end if]@)) {return true;}
 @(ind)msg->@(field.name).len++;
 @{indent -= 1}@{ind = '    '*indent}@
 @(ind)}
@@ -237,9 +241,12 @@ void _@(msg_underscored_name)_decode(const CanardRxTransfer* transfer, uint32_t*
 @[                  end if]@
 @{indent += 1}@{ind = '    '*indent}@
 @[              end if]@
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wtype-limits"
 @(ind)if (msg->@(field.name).len > @(field.type.max_size)) {
-@(ind)    msg->@(field.name).len = @(field.type.max_size);
+@(ind)    return true; /* invalid value */
 @(ind)}
+#pragma GCC diagnostic pop
 @(ind)for (size_t i=0; i < msg->@(field.name).len; i++) {
 @[        else]@
 @(ind)for (size_t i=0; i < @(field.type.max_size); i++) {
@@ -257,7 +264,7 @@ void _@(msg_underscored_name)_decode(const CanardRxTransfer* transfer, uint32_t*
 @[          end if]@
 @(ind)*bit_ofs += @(field.type.value_type.bitlen);
 @[        elif field.type.value_type.category == field.type.value_type.CATEGORY_COMPOUND]@
-@(ind)_@(underscored_name(field.type.value_type))_decode(transfer, bit_ofs, &msg->@(field_get_data(field))[i], @[if field == msg_fields[-1] and field.type.value_type.get_min_bitlen() < 8]tao && i==msg->@(field.name).len@[else]false@[end if]@);
+@(ind)if (_@(underscored_name(field.type.value_type))_decode(transfer, bit_ofs, &msg->@(field_get_data(field))[i], @[if field == msg_fields[-1] and field.type.value_type.get_min_bitlen() < 8]tao && i==msg->@(field.name).len@[else]false@[end if]@)) {return true;}
 @[        end if]@
 @{indent -= 1}@{ind = '    '*indent}@
 @(ind)}
@@ -279,6 +286,7 @@ void _@(msg_underscored_name)_decode(const CanardRxTransfer* transfer, uint32_t*
 @{indent -= 1}@{ind = '    '*indent}@
 @(ind)}
 @[  end if]@
+@(ind)return false; /* success */
 @{indent -= 1}@{ind = '    '*indent}@
 @(ind)}
 #endif
