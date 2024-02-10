@@ -124,6 +124,9 @@ void _@(msg_underscored_name)_encode(uint8_t* buffer, uint32_t* bit_ofs, @(msg_c
 @{indent -= 1}@{ind = '    '*indent}@
 @(ind)}
 @[          end if]@
+@(ind)if (msg->@(field.name).len > @(field.type.max_size)) {
+@(ind)    msg->@(field.name).len = @(field.type.max_size);
+@(ind)}
 @(ind)for (size_t i=0; i < msg->@(field.name).len; i++) {
 @[        else]@
 @(ind)for (size_t i=0; i < @(field.type.max_size); i++) {
@@ -166,7 +169,9 @@ void _@(msg_underscored_name)_decode(const CanardRxTransfer* transfer, uint32_t*
 @(ind)(void)bit_ofs;
 @(ind)(void)msg;
 @(ind)(void)tao;
-
+@(ind)if (tao && (transfer->payload_len > @(msg_define_name.upper())_MAX_SIZE)) {
+@(ind)    return;
+@(ind)}
 @[  if msg_union]@
 @(ind)@(union_msg_tag_uint_type_from_num_fields(len(msg_fields))) union_tag;
 @(ind)canardDecodeScalar(transfer, *bit_ofs, @(union_msg_tag_bitlen_from_num_fields(len(msg_fields))), false, &union_tag);
@@ -232,6 +237,9 @@ void _@(msg_underscored_name)_decode(const CanardRxTransfer* transfer, uint32_t*
 @[                  end if]@
 @{indent += 1}@{ind = '    '*indent}@
 @[              end if]@
+@(ind)if (msg->@(field.name).len > @(field.type.max_size)) {
+@(ind)    msg->@(field.name).len = @(field.type.max_size);
+@(ind)}
 @(ind)for (size_t i=0; i < msg->@(field.name).len; i++) {
 @[        else]@
 @(ind)for (size_t i=0; i < @(field.type.max_size); i++) {
