@@ -15,9 +15,14 @@ import shutil
 try:
     import dronecan.dsdl
 except Exception as ex:
-    print(ex)
-    print("Failed to import dronecan.dsdl, please install dronecan with 'python3 -m pip install dronecan'")
-    sys.exit(1)
+    # for usage in CI try with a local pydronecan path
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "../pydronecan/"))
+    try:
+        import dronecan.dsdl
+    except Exception as ex:
+        print(ex)
+        print("Failed to import dronecan.dsdl, please install dronecan with 'python3 -m pip install dronecan'")
+        sys.exit(1)
 
 from dronecan_dsdlc_helpers import *
 from dronecan_dsdlc_tester import *
