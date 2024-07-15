@@ -143,6 +143,18 @@ def expand_message(msg_name):
             f.write(output.encode("utf-8"))
     return msg_name
 
+def process_test(msg_name):
+    print(bcolors.HEADER + 'Starting Test for %s' % (msg_name,) + bcolors.ENDC)
+    if message_dict[msg_name].kind == message_dict[msg_name].KIND_SERVICE:
+        if len(message_dict[msg_name].request_fields):
+            compile_test_app(msg_name+'_request', build_dir)
+            run_test(message_dict[msg_name], 'request', build_dir)
+        compile_test_app(msg_name+'_response', build_dir)
+        run_test(message_dict[msg_name], 'response', build_dir)
+    else:
+        compile_test_app(msg_name, build_dir)
+        run_test(message_dict[msg_name], None, build_dir)
+
 # callback for maintaining list of built messages
 def append_builtlist(msg_name):
     global builtlist
@@ -215,17 +227,24 @@ if __name__ == '__main__':
     shutil.copy(os.path.join(templates_dir, 'test_helpers.h'), build_dir+'/test/')
 
     # start building test apps
+    pool = Pool()
+    one_run = False
+    results = []
     for msg_name in sorted(builtlist):
         #ignore message types that are only for includes
         if message_dict[msg_name].default_dtid is None:
             continue
-        print(bcolors.HEADER + 'Starting Test for %s' % (msg_name,) + bcolors.ENDC)
-        if message_dict[msg_name].kind == message_dict[msg_name].KIND_SERVICE:
-            if len(message_dict[msg_name].request_fields):
-                compile_test_app(msg_name+'_request', build_dir)
-                run_test(message_dict[msg_name], 'request', build_dir)
-            compile_test_app(msg_name+'_response', build_dir)
-            run_test(message_dict[msg_name], 'response', build_dir)
+        if not one_run:
+            # need to run one test not in parallel so all the dependent code gets built
+            process_test(msg_name)
+            one_run = True
         else:
-            compile_test_app(msg_name, build_dir)
-            run_test(message_dict[msg_name], None, build_dir)
+            results.append(pool.apply_async(process_test, (msg_name,)))
+
+    # get results and reraise exceptions if any
+    try:
+        for result in results:
+            result.get()
+    finally:
+        pool.terminate()
+        pool.join()

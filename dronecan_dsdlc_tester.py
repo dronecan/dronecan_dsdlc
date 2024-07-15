@@ -18,7 +18,7 @@ from dronecan_dsdlc_helpers import *
 
 def compile_test_app(msg_name, build_dir):
     print(bcolors.BOLD + 'Compiling Test App for %s' % msg_name + bcolors.ENDC)
-    subprocess.run('cd %s/test/; make -f test_%s.mk' % (build_dir, msg_name), shell=True, check=True)
+    subprocess.run('cd %s/test/; make -f test_%s.mk -j' % (build_dir, msg_name), shell=True, check=True)
 
 def run_test(msg, msg_type, build_dir):
     if msg_type:
