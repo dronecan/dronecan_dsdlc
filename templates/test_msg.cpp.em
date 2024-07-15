@@ -31,10 +31,10 @@ float random_float_val()
     return -512.0 + static_cast <float> (rand()) /( static_cast <float> (RAND_MAX/(1024.0)));
 }
 
-// Generate a random unsigned integer value from range
+// Generate a random unsigned integer value from range, inclusive
 uint32_t random_range_unsigned_val(uint32_t min, uint32_t max)
 {
-    return min + static_cast <uint32_t> (rand()) /( static_cast <uint32_t> (RAND_MAX/(max - min)));
+    return min + static_cast <uint32_t> (rand()) % (static_cast <uint32_t> (max - min + 1));
 }
 
 
