@@ -63,6 +63,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--output', '-O', action='store')
 parser.add_argument('--build', action='append')
 parser.add_argument('--run-tests', action='store_true')
+parser.add_argument('-j', '--jobs', type=int)
 parser.add_argument('namespace_dir', nargs='+')
 args = parser.parse_args()
 
@@ -143,16 +144,16 @@ def expand_message(msg_name):
             f.write(output.encode("utf-8"))
     return msg_name
 
-def process_test(msg_name):
+def process_test(msg_name, jobs):
     print(bcolors.HEADER + 'Starting Test for %s' % (msg_name,) + bcolors.ENDC)
     if message_dict[msg_name].kind == message_dict[msg_name].KIND_SERVICE:
         if len(message_dict[msg_name].request_fields):
             compile_test_app(msg_name+'_request', build_dir)
             run_test(message_dict[msg_name], 'request', build_dir)
-        compile_test_app(msg_name+'_response', build_dir)
+        compile_test_app(msg_name+'_response', build_dir, jobs)
         run_test(message_dict[msg_name], 'response', build_dir)
     else:
-        compile_test_app(msg_name, build_dir)
+        compile_test_app(msg_name, build_dir, jobs)
         run_test(message_dict[msg_name], None, build_dir)
 
 # callback for maintaining list of built messages
@@ -179,8 +180,9 @@ if __name__ == '__main__':
             buildlist = new_buildlist
 
     from multiprocessing import Pool
+    jobs = args.jobs if args.jobs is not None else os.cpu_count()
 
-    pool = Pool()
+    pool = Pool(processes=jobs)
 
     results = []
     if buildlist is not None:
@@ -227,7 +229,7 @@ if __name__ == '__main__':
     shutil.copy(os.path.join(templates_dir, 'test_helpers.h'), build_dir+'/test/')
 
     # start building test apps
-    pool = Pool()
+    pool = Pool(processes=jobs)
     one_run = False
     results = []
     for msg_name in sorted(builtlist):
@@ -236,10 +238,10 @@ if __name__ == '__main__':
             continue
         if not one_run:
             # need to run one test not in parallel so all the dependent code gets built
-            process_test(msg_name)
+            process_test(msg_name, jobs)
             one_run = True
         else:
-            results.append(pool.apply_async(process_test, (msg_name,)))
+            results.append(pool.apply_async(process_test, (msg_name, 1)))
 
     # get results and reraise exceptions if any
     try:
