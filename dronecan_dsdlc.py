@@ -11,6 +11,7 @@ import os
 import argparse
 import em
 import shutil
+import time
 
 try:
     import dronecan.dsdl
@@ -230,23 +231,28 @@ if __name__ == '__main__':
 
     # start building test apps
     pool = Pool(processes=jobs)
-    one_run = False
-    results = []
-    for msg_name in sorted(builtlist):
-        #ignore message types that are only for includes
-        if message_dict[msg_name].default_dtid is None:
-            continue
-        if not one_run:
-            # need to run one test not in parallel so all the dependent code gets built
-            process_test(msg_name, jobs)
-            one_run = True
-        else:
-            results.append(pool.apply_async(process_test, (msg_name, 1)))
-
-    # get results and reraise exceptions if any
     try:
-        for result in results:
-            result.get()
-    finally:
+        one_run = False
+        results = []
+        msg_list = [msg_name for msg_name in sorted(builtlist, reverse=True) if message_dict[msg_name].default_dtid is not None]
+        if len(msg_list) > 0:
+             # need to run one test not in parallel so all the dependent code gets built
+            process_test(msg_list.pop(), jobs)
+        # don't keep too many jobs pending so we can wait for them to finish quickly on error
+        while len(results) > 0 or len(msg_list) > 0:
+            while len(results) < jobs*1.25 and len(msg_list) > 0:
+                results.append(pool.apply_async(process_test, (msg_list.pop(), 1)))
+            time.sleep(0.1)
+            pending = []
+            for result in results:
+                if result.ready():
+                    result.get() # will raise exception if failed
+                else:
+                    pending.append(result)
+            results = pending
+    except KeyboardInterrupt:
         pool.terminate()
+        raise
+    finally:
+        pool.close()
         pool.join()
