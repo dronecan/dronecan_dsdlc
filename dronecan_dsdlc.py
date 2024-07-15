@@ -256,3 +256,5 @@ if __name__ == '__main__':
     finally:
         pool.close()
         pool.join()
+
+    print("All tests completed successfully")
