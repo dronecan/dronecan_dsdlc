@@ -26,34 +26,36 @@ def run_test(msg, msg_type, build_dir):
     else:
         msg_full_name = msg.full_name
     print(bcolors.BOLD + 'Running Test App for %s' % msg_full_name + bcolors.ENDC)
+    msg_struct = dronecan.transport.CompoundValue(msg, _mode=msg_type)
+    print(msg_full_name, "Empty struct:", msg_struct)
     p = pexpect.spawn('%s/test/%s' % (build_dir, msg_full_name))
     payload = bytearray.fromhex(p.readline().decode('utf-8').strip())
-    print("Sample Payload:", payload.hex())
+    print(msg_full_name, "Sample payload:", payload.hex())
     if len(payload) == 0:
         return
-    msg_struct = dronecan.transport.CompoundValue(msg, _mode=msg_type)
-    print(msg, msg_struct)
-    msg_struct._unpack(dronecan.transport.bits_from_bytes(payload))
-    print(msg_struct)
-    print(dronecan.transport.bits_from_bytes(payload))
-    print(msg_struct._pack())
+    bits = dronecan.transport.bits_from_bytes(payload)
+    print(msg_full_name, "Bits:", bits)
+    msg_struct._unpack(bits)
+    print(msg_full_name, "Unpacked struct:", msg_struct)
+    packed_bits = msg_struct._pack()
+    print(msg_full_name, "Repacked bits:", packed_bits)
     #pack the struct
-    repacked_payload = bytearray.hex(dronecan.transport.bytes_from_bits(msg_struct._pack()))
-    print("Packed Struct:", repacked_payload)
+    repacked_payload = bytearray.hex(dronecan.transport.bytes_from_bits(packed_bits))
+    print(msg_full_name, "Repacked payload:", repacked_payload)
     msg_struct._unpack(dronecan.transport.bits_from_bytes(bytearray.fromhex(repacked_payload)))
-    print(msg_struct)
-    print(msg_struct._pack())
+    print(msg_full_name, "Unpacked struct again:", msg_struct)
+    print(msg_full_name, "Packed bits again:", msg_struct._pack())
 
     if repacked_payload != payload.hex():
-        raise Exception("Repacked payload does not match original payload")
+        raise Exception(msg_full_name + " Repacked payload does not match original payload")
     p.sendline(repacked_payload)
     lines = p.readlines()
     stripped_lines = [line.decode('utf-8').strip() for line in lines]
-    print(stripped_lines)
+    print(msg_full_name, "Output lines:", stripped_lines)
     if 'Messages are equal' in stripped_lines:
         return
     else:
-        raise Exception("Test failed")
+        raise Exception(msg_full_name + " Test failed")
 
 if __name__ == '__main__':
     msg = dronecan.uavcan.equipment.ahrs.MagneticFieldStrength()
