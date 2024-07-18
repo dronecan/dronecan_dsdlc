@@ -55,7 +55,7 @@ def run_test(msg, msg_type, build_dir):
     if 'Messages are equal' in stripped_lines:
         return
     else:
-        raise Exception(msg_full_name + " Test failed")
+        raise Exception(msg_full_name + " test app failed")
 
 if __name__ == '__main__':
     msg = dronecan.uavcan.equipment.ahrs.MagneticFieldStrength()
