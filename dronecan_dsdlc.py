@@ -147,15 +147,18 @@ def expand_message(msg_name):
 
 def process_test(msg_name, jobs):
     print(bcolors.HEADER + 'Starting Test for %s' % (msg_name,) + bcolors.ENDC)
-    if message_dict[msg_name].kind == message_dict[msg_name].KIND_SERVICE:
-        if len(message_dict[msg_name].request_fields):
-            compile_test_app(msg_name+'_request', build_dir)
-            run_test(message_dict[msg_name], 'request', build_dir)
-        compile_test_app(msg_name+'_response', build_dir, jobs)
-        run_test(message_dict[msg_name], 'response', build_dir)
-    else:
-        compile_test_app(msg_name, build_dir, jobs)
-        run_test(message_dict[msg_name], None, build_dir)
+    try:
+        if message_dict[msg_name].kind == message_dict[msg_name].KIND_SERVICE:
+            if len(message_dict[msg_name].request_fields):
+                compile_test_app(msg_name+'_request', build_dir)
+                run_test(message_dict[msg_name], 'request', build_dir)
+            compile_test_app(msg_name+'_response', build_dir, jobs)
+            run_test(message_dict[msg_name], 'response', build_dir)
+        else:
+            compile_test_app(msg_name, build_dir, jobs)
+            run_test(message_dict[msg_name], None, build_dir)
+    except Exception as e:
+        raise Exception("Test for %s failed!" % (msg_name,)) from e
 
 # callback for maintaining list of built messages
 def append_builtlist(msg_name):
