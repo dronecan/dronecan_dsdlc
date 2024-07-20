@@ -270,3 +270,6 @@ def mkdir_p(path):
             pass
         else:
             raise
+
+def build_coding_table(msg_underscored_name, msg_union, msg_max_bitlen, msg_fields):
+    return None

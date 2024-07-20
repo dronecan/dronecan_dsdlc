@@ -76,6 +76,13 @@ uint32_t _@(msg_underscored_name)_encode(@(msg_c_type)* msg, uint8_t* buffer
 );
 bool _@(msg_underscored_name)_decode(const CanardRxTransfer* transfer, @(msg_c_type)* msg);
 
+@{coding_table = build_coding_table(msg_underscored_name, msg_union, msg_max_bitlen, msg_fields)}
+@[if coding_table is not None]
+#if CANARD_ENABLE_TABLE_ENCODING || CANARD_ENABLE_TABLE_DECODING
+extern const CanardCodingTable _@(msg_underscored_name)_coding_table;
+#endif
+@[end if]
+
 static inline uint32_t @(msg_underscored_name)_encode(@(msg_c_type)* msg, uint8_t* buffer
 #if CANARD_ENABLE_TAO_OPTION
     , bool tao
@@ -90,6 +97,15 @@ static inline uint32_t @(msg_underscored_name)_encode(@(msg_c_type)* msg, uint8_
 
     return 0; // 0-length message encodes to 0 bytes
 @[else]
+@[if coding_table is not None]
+#if CANARD_ENABLE_TABLE_ENCODING
+    return canardTableEncodeMessage(&_@(msg_underscored_name)_coding_table, buffer, msg
+#if CANARD_ENABLE_TAO_OPTION
+    , tao
+#endif
+    );
+#endif
+@[end if]
     return _@(msg_underscored_name)_encode(msg, buffer
 #if CANARD_ENABLE_TAO_OPTION
     , tao
@@ -105,6 +121,11 @@ static inline bool @(msg_underscored_name)_decode(const CanardRxTransfer* transf
     // all transports accurately convey a payload length of 0 bytes so any payload is an error
     return transfer->payload_len != 0;
 @[else]
+@[if coding_table is not None]
+#if CANARD_ENABLE_TABLE_DECODING
+    return canardTableDecodeMessage(&_@(msg_underscored_name)_coding_table, transfer, msg);
+#endif
+@[end if]
     return _@(msg_underscored_name)_decode(transfer, msg);
 @[end if]
 }

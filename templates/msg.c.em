@@ -11,6 +11,18 @@
 #include <test_helpers.h>
 #endif
 
+@{coding_table = build_coding_table(msg_underscored_name, msg_union, msg_max_bitlen, msg_fields)}
+@[if coding_table is not None]
+#if CANARD_ENABLE_TABLE_ENCODING || CANARD_ENABLE_TABLE_DECODING
+const CanardCodingTable _@(msg_underscored_name)_coding_table = {
+    .entries_max = @(len(coding_table))-1,
+    .entries = {
+@("\n".join("        "+e for e in coding_table))
+    },
+};
+#endif
+@[end if]
+
 uint32_t _@(msg_underscored_name)_encode(@(msg_c_type)* msg, uint8_t* buffer
 #if CANARD_ENABLE_TAO_OPTION
     , bool tao
