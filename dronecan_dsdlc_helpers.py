@@ -285,8 +285,12 @@ def build_coding_table(msg_underscored_name, msg_union, msg_max_bitlen, msg_fiel
     # turn table description into a list of strings
     table_str = []
     for kind, relative, *params in table:
-        params = ", ".join(str(v) for v in params)
-        table_str.append(f"{kind}({params}),")
+        if kind is None:
+            # number of list items must exactly equal number of entries!
+            table_str.append("// auxiliary entry")
+        else:
+            params = ", ".join(str(v) for v in params)
+            table_str.append(f"{kind}({params}),")
 
     return table_str
 
@@ -319,10 +323,37 @@ def _build_coding_table_core(obj_underscored_name, obj_union, obj_fields):
 
             # prepend offset to each entry that's not relative
             for s_kind, s_relative, *s_params in sub:
-                if not s_relative: # not relative, needs offset adjusted
-                    table.append((s_kind, s_relative, f"{offset}+{s_params[0]}", *s_params[1:]))
+                if s_kind is None:
+                    table.append((None, None))
                 else:
-                    table.append((s_kind, s_relative, *s_params))
+                    if not s_relative: # not relative, needs offset adjusted
+                        table.append((s_kind, s_relative, f"{offset}+{s_params[0]}", *s_params[1:]))
+                    else:
+                        table.append((s_kind, s_relative, *s_params))
+        elif isinstance(t, dronecan.dsdl.parser.ArrayType) and t.mode == t.MODE_STATIC:
+            if t.max_size > 65535: # too big to encode
+                return None
+
+            if isinstance(t.value_type, dronecan.dsdl.parser.CompoundType):
+                sub = _build_coding_table_core(field_name, t.value_type.union, t.value_type.fields)
+            else:
+                sub = _build_coding_table_core(field_name, False, [t.value_type])
+            if sub is None: return None
+            if len(sub) == 0: # array of empty objects???
+                assert False
+            if len(sub) > 256: # too many entries to encode
+                return None
+
+            table.append(("CANARD_TABLE_CODING_ENTRIES_ARRAY_STATIC", False,
+                offset, len(sub), f"sizeof({dronecan_type_to_ctype(t.value_type)})", t.max_size
+            ))
+            table.append((None, None)) # dummy auxiliary entry for accurate entry count
+            for s_kind, s_relative, *s_params in sub:
+                if s_kind is None:
+                    table.append((None, None))
+                else:
+                    # all entries must have a relative offset
+                    table.append((s_kind, True, *s_params))
         else:
             return None # unsupported type
 
