@@ -114,20 +114,20 @@ void _@(msg_underscored_name)_encode(uint8_t* buffer, uint32_t* bit_ofs, @(msg_c
 @(ind)*bit_ofs += @(field.type.bitlen);
 @[      elif field.type.category == field.type.CATEGORY_ARRAY]@
 @[        if field.type.mode == field.type.MODE_DYNAMIC]@
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wtype-limits"
+@(ind)const @(c_array_len_type(field)) @(field.name)_len = msg->@(field.name).len > @(field.type.max_size) ? @(field.type.max_size) : msg->@(field.name).len;
+#pragma GCC diagnostic pop
 @[          if field == msg_fields[-1] and field.type.value_type.get_min_bitlen() >= 8]@
 @(ind)if (!tao) {
 @{indent += 1}@{ind = '    '*indent}@
 @[          end if]@
-@(ind)canardEncodeScalar(buffer, *bit_ofs, @(array_len_field_bitlen(field.type)), &msg->@(field.name).len);
+@(ind)canardEncodeScalar(buffer, *bit_ofs, @(array_len_field_bitlen(field.type)), &@(field.name)_len);
 @(ind)*bit_ofs += @(array_len_field_bitlen(field.type));
 @[          if field == msg_fields[-1] and field.type.value_type.get_min_bitlen() >= 8]@
 @{indent -= 1}@{ind = '    '*indent}@
 @(ind)}
 @[          end if]@
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wtype-limits"
-@(ind)const size_t @(field.name)_len = msg->@(field.name).len > @(field.type.max_size) ? @(field.type.max_size) : msg->@(field.name).len;
-#pragma GCC diagnostic pop
 @(ind)for (size_t i=0; i < @(field.name)_len; i++) {
 @[        else]@
 @(ind)for (size_t i=0; i < @(field.type.max_size); i++) {
