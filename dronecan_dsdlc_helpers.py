@@ -284,7 +284,7 @@ def build_coding_table(msg_underscored_name, msg_union, msg_max_bitlen, msg_fiel
 
     # turn table description into a list of strings
     table_str = []
-    for kind, *params in table:
+    for kind, relative, *params in table:
         params = ", ".join(str(v) for v in params)
         table_str.append(f"{kind}({params}),")
 
@@ -296,8 +296,12 @@ def _build_coding_table_core(obj_underscored_name, obj_union, obj_fields):
 
     table = []
     for field in obj_fields:
-        t = field.type
-        offset = f"offsetof(struct {obj_underscored_name}, {field.name})"
+        if isinstance(field, dronecan.dsdl.parser.Type):
+            t = field
+            offset = 0
+        else:
+            t = field.type
+            offset = f"offsetof(struct {obj_underscored_name}, {field.name})"
         field_name = t.full_name.replace('.', '_').split("[")[0]
         if isinstance(t, dronecan.dsdl.parser.PrimitiveType):
             if t.kind == t.KIND_BOOLEAN or t.kind == t.KIND_UNSIGNED_INT:
@@ -306,9 +310,19 @@ def _build_coding_table_core(obj_underscored_name, obj_union, obj_fields):
                 ts = "CANARD_TABLE_CODING_SIGNED"
             elif t.kind == t.KIND_FLOAT:
                 ts = "CANARD_TABLE_CODING_FLOAT"
-            table.append(("CANARD_TABLE_CODING_ENTRY_PRIMITIVE", offset, ts, t.bitlen))
+            table.append(("CANARD_TABLE_CODING_ENTRY_PRIMITIVE", False, offset, ts, t.bitlen))
         elif isinstance(t, dronecan.dsdl.parser.VoidType):
-            table.append(("CANARD_TABLE_CODING_ENTRY_VOID", t.bitlen))
+            table.append(("CANARD_TABLE_CODING_ENTRY_VOID", True, t.bitlen))
+        elif isinstance(t, dronecan.dsdl.parser.CompoundType):
+            sub = _build_coding_table_core(field_name, t.union, t.fields) # build the compound table
+            if sub is None: return None
+
+            # prepend offset to each entry that's not relative
+            for s_kind, s_relative, *s_params in sub:
+                if not s_relative: # not relative, needs offset adjusted
+                    table.append((s_kind, s_relative, f"{offset}+{s_params[0]}", *s_params[1:]))
+                else:
+                    table.append((s_kind, s_relative, *s_params))
         else:
             return None # unsupported type
 
