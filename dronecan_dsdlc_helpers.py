@@ -277,7 +277,7 @@ def build_coding_table(msg_underscored_name, msg_union, msg_max_bitlen, msg_fiel
     if int((msg_max_bitlen+7)/8) > 65535: # too big to encode
         return None
 
-    table = _build_coding_table_core(msg_underscored_name, msg_union, msg_fields)
+    table = _build_coding_table_core(msg_underscored_name, msg_union, msg_fields, True)
     if table is None: return None
     if len(table) > 65536: # too big to encode
         return None
@@ -294,12 +294,13 @@ def build_coding_table(msg_underscored_name, msg_union, msg_max_bitlen, msg_fiel
 
     return table_str
 
-def _build_coding_table_core(obj_underscored_name, obj_union, obj_fields):
+def _build_coding_table_core(obj_underscored_name, obj_union, obj_fields, tao):
     if obj_union:
         return None # not yet supported
 
     table = []
-    for field in obj_fields:
+    for field_idx, field in enumerate(obj_fields):
+        tao_eligible = tao and field_idx == len(obj_fields)-1
         if isinstance(field, dronecan.dsdl.parser.Type):
             t = field
             offset = 0
@@ -318,7 +319,7 @@ def _build_coding_table_core(obj_underscored_name, obj_union, obj_fields):
         elif isinstance(t, dronecan.dsdl.parser.VoidType):
             table.append(("CANARD_TABLE_CODING_ENTRY_VOID", True, t.bitlen))
         elif isinstance(t, dronecan.dsdl.parser.CompoundType):
-            sub = _build_coding_table_core(field_name, t.union, t.fields) # build the compound table
+            sub = _build_coding_table_core(field_name, t.union, t.fields, tao_eligible) # build the compound table
             if sub is None: return None
 
             # prepend offset to each entry that's not relative
@@ -327,27 +328,44 @@ def _build_coding_table_core(obj_underscored_name, obj_union, obj_fields):
                     table.append((None, None))
                 else:
                     if not s_relative: # not relative, needs offset adjusted
+                        if s_kind.startswith("CANARD_TABLE_CODING_ENTRIES_ARRAY_DYNAMIC"): # has a second offset
+                            s_params = (*s_params[:-1], f"{offset}+{s_params[-1]}")
                         table.append((s_kind, s_relative, f"{offset}+{s_params[0]}", *s_params[1:]))
                     else:
                         table.append((s_kind, s_relative, *s_params))
-        elif isinstance(t, dronecan.dsdl.parser.ArrayType) and t.mode == t.MODE_STATIC:
+        elif isinstance(t, dronecan.dsdl.parser.ArrayType):
             if t.max_size > 65535: # too big to encode
                 return None
 
+            use_tao = t.mode == t.MODE_DYNAMIC and tao_eligible and t.value_type.get_min_bitlen() >= 8
+
             if isinstance(t.value_type, dronecan.dsdl.parser.CompoundType):
-                sub = _build_coding_table_core(field_name, t.value_type.union, t.value_type.fields)
+                sub = _build_coding_table_core(field_name, t.value_type.union, t.value_type.fields, tao_eligible and not use_tao)
             else:
-                sub = _build_coding_table_core(field_name, False, [t.value_type])
+                sub = _build_coding_table_core(field_name, False, [t.value_type], tao_eligible and not use_tao)
             if sub is None: return None
             if len(sub) == 0: # array of empty objects???
                 assert False
             if len(sub) > 256: # too many entries to encode
                 return None
 
-            table.append(("CANARD_TABLE_CODING_ENTRIES_ARRAY_STATIC", False,
-                offset, len(sub), f"sizeof({dronecan_type_to_ctype(t.value_type)})", t.max_size
-            ))
-            table.append((None, None)) # dummy auxiliary entry for accurate entry count
+            # entries for the array itself
+            if t.mode == t.MODE_STATIC:
+                table.append(("CANARD_TABLE_CODING_ENTRIES_ARRAY_STATIC", False,
+                    offset, len(sub), f"sizeof({dronecan_type_to_ctype(t.value_type)})", t.max_size
+                ))
+                table.append((None, None)) # dummy auxiliary entry for accurate entry count
+            elif t.mode == t.MODE_DYNAMIC:
+                # same cdef as field_cdef
+                cdef = 'struct { uint%u_t len; %s data[%u]; }' % (c_int_type_bitlen(array_len_field_bitlen(t)), dronecan_type_to_ctype(t.value_type), t.max_size)
+                table.append((f"CANARD_TABLE_CODING_ENTRIES_ARRAY_DYNAMIC", False,
+                    f"{offset}+offsetof({cdef}, data)", 1 if use_tao else 0, len(sub), f"sizeof({dronecan_type_to_ctype(t.value_type)})", t.max_size,
+                    t.max_size.bit_length(), f"{offset}+offsetof({cdef}, len)"
+                ))
+                table.extend(((None, None),)*2) # dummy auxiliary entries for accurate entry count
+            else:
+                assert False # unknown type
+
             for s_kind, s_relative, *s_params in sub:
                 if s_kind is None:
                     table.append((None, None))
@@ -355,6 +373,6 @@ def _build_coding_table_core(obj_underscored_name, obj_union, obj_fields):
                     # all entries must have a relative offset
                     table.append((s_kind, True, *s_params))
         else:
-            return None # unsupported type
+            assert False # unknown type
 
     return table
