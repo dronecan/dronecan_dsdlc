@@ -15,6 +15,7 @@
 @[if coding_table is not None]
 #if CANARD_ENABLE_TABLE_ENCODING || CANARD_ENABLE_TABLE_DECODING
 const CanardCodingTable _@(msg_underscored_name)_coding_table = {
+    .max_size = @(msg_define_name.upper())_MAX_SIZE,
     .entries_max = @(len(coding_table))-1,
     .entries = {
 @("\n".join("        "+e for e in coding_table))

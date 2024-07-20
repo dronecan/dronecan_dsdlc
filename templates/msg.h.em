@@ -99,11 +99,13 @@ static inline uint32_t @(msg_underscored_name)_encode(@(msg_c_type)* msg, uint8_
 @[else]
 @[if coding_table is not None]
 #if CANARD_ENABLE_TABLE_ENCODING
-    return canardTableEncodeMessage(&_@(msg_underscored_name)_coding_table, buffer, msg
+    if (sizeof(@(msg_c_type)) <= 65535) { // ensure offsets fit in table
+        return canardTableEncodeMessage(&_@(msg_underscored_name)_coding_table, buffer, msg
 #if CANARD_ENABLE_TAO_OPTION
-    , tao
+        , tao
 #endif
-    );
+        );
+    }
 #endif
 @[end if]
     return _@(msg_underscored_name)_encode(msg, buffer
@@ -123,7 +125,9 @@ static inline bool @(msg_underscored_name)_decode(const CanardRxTransfer* transf
 @[else]
 @[if coding_table is not None]
 #if CANARD_ENABLE_TABLE_DECODING
-    return canardTableDecodeMessage(&_@(msg_underscored_name)_coding_table, transfer, msg);
+    if (sizeof(@(msg_c_type)) <= 65535) { // ensure offsets fit in table
+        return canardTableDecodeMessage(&_@(msg_underscored_name)_coding_table, transfer, msg);
+    }
 #endif
 @[end if]
     return _@(msg_underscored_name)_decode(transfer, msg);

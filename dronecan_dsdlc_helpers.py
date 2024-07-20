@@ -272,4 +272,44 @@ def mkdir_p(path):
             raise
 
 def build_coding_table(msg_underscored_name, msg_union, msg_max_bitlen, msg_fields):
-    return None
+    if len(msg_fields) == 0: # cheaper to encode an empty message without a table
+        return None
+    if int((msg_max_bitlen+7)/8) > 65535: # too big to encode
+        return None
+
+    table = _build_coding_table_core(msg_underscored_name, msg_union, msg_fields)
+    if table is None: return None
+    if len(table) > 65536: # too big to encode
+        return None
+
+    # turn table description into a list of strings
+    table_str = []
+    for kind, *params in table:
+        params = ", ".join(str(v) for v in params)
+        table_str.append(f"{kind}({params}),")
+
+    return table_str
+
+def _build_coding_table_core(obj_underscored_name, obj_union, obj_fields):
+    if obj_union:
+        return None # not yet supported
+
+    table = []
+    for field in obj_fields:
+        t = field.type
+        offset = f"offsetof(struct {obj_underscored_name}, {field.name})"
+        field_name = t.full_name.replace('.', '_').split("[")[0]
+        if isinstance(t, dronecan.dsdl.parser.PrimitiveType):
+            if t.kind == t.KIND_BOOLEAN or t.kind == t.KIND_UNSIGNED_INT:
+                ts = "CANARD_TABLE_CODING_UNSIGNED"
+            elif t.kind == t.KIND_SIGNED_INT:
+                ts = "CANARD_TABLE_CODING_SIGNED"
+            elif t.kind == t.KIND_FLOAT:
+                ts = "CANARD_TABLE_CODING_FLOAT"
+            table.append(("CANARD_TABLE_CODING_ENTRY_PRIMITIVE", offset, ts, t.bitlen))
+        elif isinstance(t, dronecan.dsdl.parser.VoidType):
+            table.append(("CANARD_TABLE_CODING_ENTRY_VOID", t.bitlen))
+        else:
+            return None # unsupported type
+
+    return table
