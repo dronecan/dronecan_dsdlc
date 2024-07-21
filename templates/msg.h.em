@@ -176,8 +176,14 @@ bool _@(msg_underscored_name)_decode(const CanardRxTransfer* transfer, uint32_t*
 @[  if msg_union]@
 @(ind)@(union_msg_tag_uint_type_from_num_fields(len(msg_fields))) union_tag;
 @(ind)canardDecodeScalar(transfer, *bit_ofs, @(union_msg_tag_bitlen_from_num_fields(len(msg_fields))), false, &union_tag);
-@(ind)msg->union_tag = (enum @(msg_underscored_name)_type_t)union_tag;
 @(ind)*bit_ofs += @(union_msg_tag_bitlen_from_num_fields(len(msg_fields)));
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wtype-limits"
+@(ind)if (union_tag >= @(len(msg_fields))) {
+@(ind)    return true; /* invalid value */
+@(ind)}
+#pragma GCC diagnostic pop
+@(ind)msg->union_tag = (enum @(msg_underscored_name)_type_t)union_tag;
 
 @(ind)switch(msg->union_tag) {
 @{indent += 1}@{ind = '    '*indent}@
