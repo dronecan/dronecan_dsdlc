@@ -295,10 +295,45 @@ def build_coding_table(msg_underscored_name, msg_union, msg_max_bitlen, msg_fiel
     return table_str
 
 def _build_coding_table_core(obj_underscored_name, obj_union, obj_fields, tao):
-    if obj_union:
-        return None # not yet supported
-
     table = []
+
+    if obj_union: # unions are a special case
+        if len(obj_fields) == 0 or len(obj_fields) > 255: # out of range to encode
+            return None
+
+        # entries to describe the union
+        table.append(("CANARD_TABLE_CODING_ENTRIES_UNION", False,
+            f"offsetof(struct {obj_underscored_name}, {obj_fields[0].name})", len(obj_fields),
+            union_msg_tag_bitlen_from_num_fields(len(obj_fields)),
+            f"offsetof(struct {obj_underscored_name}, union_tag)"
+        ))
+        table.append((None, None)) # dummy auxiliary entry for accurate entry count
+
+        field_entries = []
+        for field in obj_fields:
+            t = field.type
+
+            if isinstance(t, dronecan.dsdl.parser.CompoundType):
+                sub = _build_coding_table_core(field.name, t.union, t.fields, tao)
+            else:
+                sub = _build_coding_table_core(field.name, False, [t], tao)
+            if sub is None: return None
+            if len(sub) > 255: # too many entries to encode
+                return None
+
+            # entry to describe this field
+            table.append(("CANARD_TABLE_CODING_ENTRY_UNION_FIELD", True, len(sub)))
+
+            for s_kind, s_relative, *s_params in sub:
+                if s_kind is None:
+                    field_entries.append((None, None))
+                else:
+                    # all entries must have a relative offset
+                    field_entries.append((s_kind, True, *s_params))
+
+        table.extend(field_entries)
+        return table
+
     for field_idx, field in enumerate(obj_fields):
         tao_eligible = tao and field_idx == len(obj_fields)-1
         if isinstance(field, dronecan.dsdl.parser.Type):
@@ -328,7 +363,8 @@ def _build_coding_table_core(obj_underscored_name, obj_union, obj_fields, tao):
                     table.append((None, None))
                 else:
                     if not s_relative: # not relative, needs offset adjusted
-                        if s_kind.startswith("CANARD_TABLE_CODING_ENTRIES_ARRAY_DYNAMIC"): # has a second offset
+                        if s_kind.startswith("CANARD_TABLE_CODING_ENTRIES_ARRAY_DYNAMIC") \
+                                or s_kind == "CANARD_TABLE_CODING_ENTRIES_UNION": # has a second offset
                             s_params = (*s_params[:-1], f"{offset}+{s_params[-1]}")
                         table.append((s_kind, s_relative, f"{offset}+{s_params[0]}", *s_params[1:]))
                     else:
