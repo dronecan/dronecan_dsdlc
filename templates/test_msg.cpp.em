@@ -89,7 +89,7 @@ int main() {
     // Create a UAVCAN message
     @(msg_underscored_name) _msg = sample_@(msg_underscored_name)_msg();
 
-    uint8_t buffer[@(msg_define_name.upper())_MAX_SIZE] {};
+    uint8_t buffer[@(msg_define_name.upper())_MAX_SIZE];
 
     // encode the message
     uint32_t data_len = @(msg_underscored_name)_encode(&_msg, buffer);
