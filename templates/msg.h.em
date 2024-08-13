@@ -69,18 +69,76 @@ extern "C"
 {
 #endif
 
-uint32_t @(msg_underscored_name)_encode(@(msg_c_type)* msg, uint8_t* buffer
+uint32_t _@(msg_underscored_name)_encode(@(msg_c_type)* msg, uint8_t* buffer
 #if CANARD_ENABLE_TAO_OPTION
     , bool tao
 #endif
 );
-bool @(msg_underscored_name)_decode(const CanardRxTransfer* transfer, @(msg_c_type)* msg);
+bool _@(msg_underscored_name)_decode(const CanardRxTransfer* transfer, @(msg_c_type)* msg);
+
+@{coding_table = build_coding_table(msg_underscored_name, msg_union, msg_max_bitlen, msg_fields)}
+@[if coding_table is not None]
+#if CANARD_ENABLE_TABLE_ENCODING || CANARD_ENABLE_TABLE_DECODING
+extern const CanardCodingTable _@(msg_underscored_name)_coding_table;
+#endif
+@[end if]
+
+static inline uint32_t @(msg_underscored_name)_encode(@(msg_c_type)* msg, uint8_t* buffer
+#if CANARD_ENABLE_TAO_OPTION
+    , bool tao
+#endif
+) {
+@[if msg_max_bitlen == 0]
+    (void)msg;
+    (void)buffer;
+#if CANARD_ENABLE_TAO_OPTION
+    (void)tao;
+#endif
+
+    return 0; // 0-length message encodes to 0 bytes
+@[else]
+@[if coding_table is not None]
+#if CANARD_ENABLE_TABLE_ENCODING
+    if (sizeof(@(msg_c_type)) <= 65535) { // ensure offsets fit in table
+        return canardTableEncodeMessage(&_@(msg_underscored_name)_coding_table, buffer, msg
+#if CANARD_ENABLE_TAO_OPTION
+        , tao
+#endif
+        );
+    }
+#endif
+@[end if]
+    return _@(msg_underscored_name)_encode(msg, buffer
+#if CANARD_ENABLE_TAO_OPTION
+    , tao
+#endif
+    );
+@[end if]
+}
+
+static inline bool @(msg_underscored_name)_decode(const CanardRxTransfer* transfer, @(msg_c_type)* msg) {
+@[if msg_max_bitlen == 0]
+    (void)msg;
+
+    // all transports accurately convey a payload length of 0 bytes so any payload is an error
+    return transfer->payload_len != 0;
+@[else]
+@[if coding_table is not None]
+#if CANARD_ENABLE_TABLE_DECODING
+    if (sizeof(@(msg_c_type)) <= 65535) { // ensure offsets fit in table
+        return canardTableDecodeMessage(&_@(msg_underscored_name)_coding_table, transfer, msg);
+    }
+#endif
+@[end if]
+    return _@(msg_underscored_name)_decode(transfer, msg);
+@[end if]
+}
 
 #if defined(CANARD_DSDLC_INTERNAL)
 @{indent = 0}@{ind = '    '*indent}@
-static inline void _@(msg_underscored_name)_encode(uint8_t* buffer, uint32_t* bit_ofs, @(msg_c_type)* msg, bool tao);
-static inline bool _@(msg_underscored_name)_decode(const CanardRxTransfer* transfer, uint32_t* bit_ofs, @(msg_c_type)* msg, bool tao);
-void _@(msg_underscored_name)_encode(uint8_t* buffer, uint32_t* bit_ofs, @(msg_c_type)* msg, bool tao) {
+static inline void __@(msg_underscored_name)_encode(uint8_t* buffer, uint32_t* bit_ofs, @(msg_c_type)* msg, bool tao);
+static inline bool __@(msg_underscored_name)_decode(const CanardRxTransfer* transfer, uint32_t* bit_ofs, @(msg_c_type)* msg, bool tao);
+void __@(msg_underscored_name)_encode(uint8_t* buffer, uint32_t* bit_ofs, @(msg_c_type)* msg, bool tao) {
 @{indent += 1}@{ind = '    '*indent}@
 @(ind)(void)buffer;
 @(ind)(void)bit_ofs;
@@ -101,7 +159,7 @@ void _@(msg_underscored_name)_encode(uint8_t* buffer, uint32_t* bit_ofs, @(msg_c
 @{indent += 1}@{ind = '    '*indent}@
 @[      end if]@
 @[      if field.type.category == field.type.CATEGORY_COMPOUND]@
-@(ind)_@(underscored_name(field.type))_encode(buffer, bit_ofs, &msg->@(field.name), @('tao' if (field == msg_fields[-1] or msg_union) else 'false'));
+@(ind)__@(underscored_name(field.type))_encode(buffer, bit_ofs, &msg->@(field.name), @('tao' if (field == msg_fields[-1] or msg_union) else 'false'));
 @[      elif field.type.category == field.type.CATEGORY_PRIMITIVE]@
 @[        if field.type.kind == field.type.KIND_FLOAT and field.type.bitlen == 16]@
 @(ind){
@@ -144,7 +202,7 @@ void _@(msg_underscored_name)_encode(uint8_t* buffer, uint32_t* bit_ofs, @(msg_c
 @[          end if]@
 @(ind)*bit_ofs += @(field.type.value_type.bitlen);
 @[        elif field.type.value_type.category == field.type.value_type.CATEGORY_COMPOUND]@
-@(ind)_@(underscored_name(field.type.value_type))_encode(buffer, bit_ofs, &msg->@(field_get_data(field))[i], @[if field == msg_fields[-1] and field.type.value_type.get_min_bitlen() < 8]tao && i==msg->@(field.name).len@[else]false@[end if]@);
+@(ind)__@(underscored_name(field.type.value_type))_encode(buffer, bit_ofs, &msg->@(field_get_data(field))[i], @[if field == msg_fields[-1] and field.type.value_type.get_min_bitlen() < 8]tao && i==msg->@(field.name).len@[else]false@[end if]@);
 @[        end if]@
 @{indent -= 1}@{ind = '    '*indent}@
 @(ind)}
@@ -167,7 +225,7 @@ void _@(msg_underscored_name)_encode(uint8_t* buffer, uint32_t* bit_ofs, @(msg_c
 /*
  decode @(msg_underscored_name), return true on failure, false on success
 */
-bool _@(msg_underscored_name)_decode(const CanardRxTransfer* transfer, uint32_t* bit_ofs, @(msg_c_type)* msg, bool tao) {
+bool __@(msg_underscored_name)_decode(const CanardRxTransfer* transfer, uint32_t* bit_ofs, @(msg_c_type)* msg, bool tao) {
 @{indent += 1}@{ind = '    '*indent}@
 @(ind)(void)transfer;
 @(ind)(void)bit_ofs;
@@ -194,7 +252,7 @@ bool _@(msg_underscored_name)_decode(const CanardRxTransfer* transfer, uint32_t*
 @{indent += 1}@{ind = '    '*indent}@
 @[      end if]@
 @[      if field.type.category == field.type.CATEGORY_COMPOUND]@
-@(ind)if (_@(underscored_name(field.type))_decode(transfer, bit_ofs, &msg->@(field.name), @('tao' if (field == msg_fields[-1] or msg_union) else 'false'))) {return true;}
+@(ind)if (__@(underscored_name(field.type))_decode(transfer, bit_ofs, &msg->@(field.name), @('tao' if (field == msg_fields[-1] or msg_union) else 'false'))) {return true;}
 @[      elif field.type.category == field.type.CATEGORY_PRIMITIVE]@
 @[        if field.type.kind == field.type.KIND_FLOAT and field.type.bitlen == 16]@
 @(ind){
@@ -235,7 +293,7 @@ bool _@(msg_underscored_name)_decode(const CanardRxTransfer* transfer, uint32_t*
 @(ind)uint32_t max_bits = (transfer->payload_len*8)-7; // TAO elements must be >= 8 bits
 @(ind)while (max_bits > *bit_ofs) {
 @{indent += 1}@{ind = '    '*indent}@
-@(ind)if (!max_len-- || _@(underscored_name(field.type.value_type))_decode(transfer, bit_ofs, &msg->@(field_get_data(field))[msg->@(field.name).len], @[if field == msg_fields[-1] and field.type.value_type.get_min_bitlen() < 8]tao && i==msg->@(field.name).len@[else]false@[end if]@)) {return true;}
+@(ind)if (!max_len-- || __@(underscored_name(field.type.value_type))_decode(transfer, bit_ofs, &msg->@(field_get_data(field))[msg->@(field.name).len], @[if field == msg_fields[-1] and field.type.value_type.get_min_bitlen() < 8]tao && i==msg->@(field.name).len@[else]false@[end if]@)) {return true;}
 @(ind)msg->@(field.name).len++;
 @{indent -= 1}@{ind = '    '*indent}@
 @(ind)}
@@ -269,7 +327,7 @@ bool _@(msg_underscored_name)_decode(const CanardRxTransfer* transfer, uint32_t*
 @[          end if]@
 @(ind)*bit_ofs += @(field.type.value_type.bitlen);
 @[        elif field.type.value_type.category == field.type.value_type.CATEGORY_COMPOUND]@
-@(ind)if (_@(underscored_name(field.type.value_type))_decode(transfer, bit_ofs, &msg->@(field_get_data(field))[i], @[if field == msg_fields[-1] and field.type.value_type.get_min_bitlen() < 8]tao && i==msg->@(field.name).len@[else]false@[end if]@)) {return true;}
+@(ind)if (__@(underscored_name(field.type.value_type))_decode(transfer, bit_ofs, &msg->@(field_get_data(field))[i], @[if field == msg_fields[-1] and field.type.value_type.get_min_bitlen() < 8]tao && i==msg->@(field.name).len@[else]false@[end if]@)) {return true;}
 @[        end if]@
 @{indent -= 1}@{ind = '    '*indent}@
 @(ind)}
