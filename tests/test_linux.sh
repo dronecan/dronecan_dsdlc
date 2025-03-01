@@ -5,7 +5,7 @@ set -e
 set -x
 
 # test compiler on linux
-python3 -m pip install -U empy==3.3.4 pexpect dronecan
+python3 -m pip install -U empy pexpect dronecan
 rm -rf DSDL
 git clone https://github.com/DroneCAN/DSDL
 

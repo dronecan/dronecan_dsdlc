@@ -3,7 +3,7 @@
 This project contains tools to generate C code for packing DroneCAN messages.
 
 ## Dependencies
-* `pip install empy==3.3.4`
+* `pip install empy`
 * `pip install pexpect`
 
 ## How To Use
