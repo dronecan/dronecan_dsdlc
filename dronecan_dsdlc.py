@@ -22,7 +22,10 @@ except Exception as ex:
         import dronecan.dsdl
     except Exception as ex:
         print(ex)
-        print("Failed to import dronecan.dsdl, please install dronecan with 'python3 -m pip install dronecan'")
+        if "pkg_resources" in str(ex):
+            print("Failed to import pkg_resources, please install setuptools with 'python3 -m pip install setuptools'")
+        else:
+            print("Failed to import dronecan.dsdl, please install dronecan with 'python3 -m pip install dronecan'")
         sys.exit(1)
 
 from dronecan_dsdlc_helpers import *
