@@ -13,6 +13,19 @@ import em
 import shutil
 import time
 
+if __name__ == '__main__':
+    import multiprocessing
+
+    default_method = multiprocessing.get_all_start_methods()[0]
+    # we are not compatible with forkserver because we trust argv to be set up
+    # during module import, which using forkserver it is not in Python 3.13 and
+    # later. as Python 3.14 and later make forkserver the default on Linux, we
+    # need to switch back to the previous default of fork until we fix our code
+    # to not run stuff on import.
+    if default_method == "forkserver":
+        default_method = "fork"
+    multiprocessing.set_start_method(default_method)
+
 try:
     import dronecan.dsdl
 except Exception as ex:
