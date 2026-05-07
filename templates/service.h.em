@@ -5,7 +5,7 @@
 #include <@(msg_header_name_response(msg))>
 
 #define @(underscored_name(msg).upper())_ID @(msg.default_dtid)
-#define @(underscored_name(msg).upper())_SIGNATURE @('(0x%08XULL)' % (msg.get_data_type_signature(),))
+#define @(underscored_name(msg).upper())_SIGNATURE @('(0x%016XULL)' % (msg.get_data_type_signature(),))
 @[end if]@
 
 #if defined(__cplusplus) && defined(DRONECAN_CXX_WRAPPERS)

@@ -17,7 +17,7 @@ for field in msg_fields:
 
 
 #define @(msg_define_name.upper())_MAX_SIZE @(int((msg_max_bitlen+7)/8))
-#define @(msg_define_name.upper())_SIGNATURE @('(0x%08XULL)' % (msg_dt_sig,))
+#define @(msg_define_name.upper())_SIGNATURE @('(0x%016XULL)' % (msg_dt_sig,))
 @[  if msg_default_dtid is not None]@
 #define @(msg_define_name.upper())_ID @(msg_default_dtid)
 @[  end if]@
