@@ -91,6 +91,19 @@ build_dir = os.path.abspath(args.output)
 
 templates_dir = os.path.join(os.path.dirname(__file__), 'templates')
 
+
+def empy_compat(template):
+    # empy >= 4 removed the '@)' escape markup; replace it with a plain ')'.
+    # Older empy (3.x) still requires '@)', so only strip it on empy >= 4.
+    try:
+        empy_major = int(str(getattr(em, '__version__', '3')).split('.')[0])
+    except ValueError:
+        empy_major = 3
+    if empy_major >= 4:
+        template = template.replace('@)', ')')
+    return template
+
+
 messages = dronecan.dsdl.parse_namespaces(namespace_paths)
 message_dict = {}
 builtlist = set()
@@ -105,15 +118,15 @@ if args.run_tests:
 
 # load standard templates
 with open(os.path.join(templates_dir, 'msg.h.em'), 'rb') as f:
-    msg_header_template = f.read().decode("utf-8")
+    msg_header_template = empy_compat(f.read().decode("utf-8"))
 with open(os.path.join(templates_dir, 'msg.c.em'), 'rb') as f:
-    msg_source_template = f.read().decode("utf-8")
+    msg_source_template = empy_compat(f.read().decode("utf-8"))
 with open(os.path.join(templates_dir, 'service.h.em'), 'rb') as f:
-    service_header_template = f.read().decode("utf-8")
+    service_header_template = empy_compat(f.read().decode("utf-8"))
 with open(os.path.join(templates_dir, 'test_msg.cpp.em'), 'rb') as f:
-    test_src_template = f.read().decode("utf-8")
+    test_src_template = empy_compat(f.read().decode("utf-8"))
 with open(os.path.join(templates_dir, 'Makefile.em'), 'rb') as f:
-    test_mk_template = f.read().decode("utf-8")
+    test_mk_template = empy_compat(f.read().decode("utf-8"))
 
 
 # expand source files and test files for messages
@@ -124,7 +137,7 @@ def expand_message(msg_name):
     for template in templates:
         output = ''
         if msg.kind == msg.KIND_SERVICE and template['type'] == 'service_header':
-            output = em.expand(service_header_template, {"msg": msg})
+            output = em.expand(service_header_template, {'msg': msg})
         elif msg.kind == msg.KIND_SERVICE and template['type'] == 'response_header':
             output = em.expand(msg_header_template, get_empy_env_response(msg))
         elif msg.kind == msg.KIND_SERVICE and template['type'] == 'request_header':
@@ -152,7 +165,7 @@ def expand_message(msg_name):
         if not output.strip():
             continue
 
-        output_file = os.path.join(build_dir, em.expand('@{from dronecan_dsdlc_helpers import *}'+template['output_file'], {"msg": msg}))
+        output_file = os.path.join(build_dir, em.expand('@{from dronecan_dsdlc_helpers import *}'+template['output_file'], {'msg': msg}))
         mkdir_p(os.path.dirname(output_file))
         with open(output_file, 'wb') as f:
             f.write(output.encode("utf-8"))
